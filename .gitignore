@@ -1,0 +1,10 @@
+result
+.direnv
+.pre-commit-config.yaml
+
+
+# Added by cargo
+
+backend/target
+frontend/node_modules
+frontend/build
