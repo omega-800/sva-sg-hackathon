@@ -6,6 +6,7 @@ import HelloWorld from "./components/HelloWorld.vue";
   <v-app>
     <v-container>
       <HelloWorld />
+      
     </v-container>
   </v-app>
 </template>
