@@ -48,14 +48,31 @@ const isVisible = (question: Question) => {
           ></v-radio>
         </v-radio-group>
 
-        <!-- Number Inputs Type (Composite) -->
-        <div v-else-if="question.type === 'number-inputs'">
+        <!-- Inputs Group Type (Composite) -->
+        <div v-else-if="question.type === 'inputs'">
           <p class="text-subtitle-1 mb-2">{{ question.text }}</p>
           <template v-for="field in question.fields" :key="field.id">
+            <!-- Number Input -->
             <v-number-input
+              v-if="field.type === 'number'"
               v-model.number="answers[field.id]"
               :label="field.label"
               controlVariant="stacked"
+              :disabled="disabled"
+            />
+             <!-- Date Input -->
+             <v-text-field
+              v-else-if="field.type === 'date'"
+              v-model="answers[field.id]"
+              :label="field.label"
+              type="date"
+              :disabled="disabled"
+            />
+            <!-- Text Input (Default) -->
+            <v-text-field
+              v-else
+              v-model="answers[field.id]"
+              :label="field.label"
               :disabled="disabled"
             />
           </template>

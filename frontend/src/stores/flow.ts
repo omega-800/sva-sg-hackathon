@@ -35,17 +35,26 @@ export const useFlowStore = defineStore("flow", {
     groupedPath: (state) => {
         const groups: { title: string, nodes: { node: AnyNode, index: number }[] }[] = [];
         let currentGroup: { title: string, nodes: { node: AnyNode, index: number }[] } | null = null;
+        // Keep track of the last valid title to inherit
+        let lastTitle = "";
 
         state.path.forEach((node, index) => {
-             // If node has no title (e.g. some internal nodes?), maybe skip or attach to previous?
-             // Assuming nodes worthy of steps have titles.
-             const title = node.title || "";
+             // Inherit title if missing
+             let title = node.title;
+             if (!title || title.trim() === "") {
+                 title = lastTitle;
+             } else {
+                 lastTitle = title;
+             }
+             
+             // If still no title (e.g. start node without title?), use empty or some default?
+             // Start node usually has title "Willkommen"
              
              if (!currentGroup || currentGroup.title !== title) {
                  if (currentGroup) {
                      groups.push(currentGroup);
                  }
-                 currentGroup = { title, nodes: [] };
+                 currentGroup = { title: title || "", nodes: [] };
              }
              
              currentGroup.nodes.push({ node, index });

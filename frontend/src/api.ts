@@ -153,8 +153,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
         next: {
           op: "if",
           val: ["arbeit", "taetig"],
-          lhs: "50cded42-3326-4919-9e0a-000000031",
-          rhs: "50cded42-3326-4919-9e0a-000000034",
+          lhs: "50cded42-3326-4919-9e0a-000000000031",
+          rhs: "50cded42-3326-4919-9e0a-000000000034",
         },
         question: "Arbeiten Sie?",
         path: ["arbeit", "taetig"],
@@ -231,8 +231,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
             lhs: ["vermoegen", "betrag"],
             rhs: 4000,
           },
-          lhs: "50cded42-3326-4919-9e0a-0000009997",
-          rhs: "50cded42-3326-4919-9e0a-000000040",
+          lhs: "50cded42-3326-4919-9e0a-0000000009997",
+          rhs: "50cded42-3326-4919-9e0a-000000000040",
         },
       },
       {
@@ -245,8 +245,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
         next: {
           op: "if",
           val: ["vermoegen", "fahrzeug", "vorhanden"],
-          lhs: "50cded42-3326-4919-9e0a-000000043",
-          rhs: "50cded42-3326-4919-9e0a-000000999",
+          lhs: "50cded42-3326-4919-9e0a-000000000043",
+          rhs: "50cded42-3326-4919-9e0a-000000000999",
         },
         choices: [
           {
@@ -259,7 +259,7 @@ export const fetchFlow = (): Promise<Flowchart> =>
           },
         ],
       },
-      {
+      {                                 
         id: "50cded42-3326-4919-9e0a-000000000043",
         type: "input-node",
         input: "number",
