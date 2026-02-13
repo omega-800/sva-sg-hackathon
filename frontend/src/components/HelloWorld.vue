@@ -1,41 +1,46 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { VStepper, VCard } from 'vuetify/components'
 import StepOne from './StepOne.vue'
+import { useFlowStore } from '../stores/flow'
 const radios = ref('one')
 
-const steps = [
-  'Wohnen in Basel-Stadt',
-  'Haushalt',
-  'Vermögen und Einkommen',
-  'Ausgaben',
-  'Ergebnis',
-]
+const flowStore = useFlowStore()
+
+const steps = ref<string[]>([])
+const step = ref(1)
+
+onMounted(async () => {
+  await flowStore.fetchFlow()
+  steps.value = flowStore.getTitles
+})
+
+
 </script>
 
 <template>
   <v-app>
-    <v-stepper alt-labels editable :items="steps">
-      <template v-slot:item.1>
-        <v-card title="Step One" flat>
-          <p>Selected Button: {{ radios }}</p>
-          <v-radio-group v-model="radios">
-            <v-radio label="Option One" value="one"></v-radio>
-            <v-radio label="Option 2 (string)" value="2"></v-radio>
-            <v-radio :value="3" label="Option 3 (integer)"></v-radio>
-          </v-radio-group>
-        </v-card>
-      </template>
-
-      <template v-slot:item.2>
-        <v-card title="Step Two" flat>
-          <StepOne />
-        </v-card>
-      </template>
-
-      <template v-slot:item.3>
-        <v-card title="Step Three" flat>...</v-card>
-      </template>
+    <v-stepper
+      v-model="step"
+      alt-labels
+      editable
+      :items="steps"
+    >
+      <v-stepper-window>
+        <v-stepper-window-item
+          v-for="(item, index) in steps"
+          :key="index"
+          :value="index + 1"
+        >
+          <v-card flat>
+            <v-card-title>{{ item }}</v-card-title>
+            <v-card-text>
+              <StepOne v-if="index === 0" />
+              <!-- Add other step components here -->
+            </v-card-text>
+          </v-card>
+        </v-stepper-window-item>
+      </v-stepper-window>
     </v-stepper>
   </v-app>
 </template>
