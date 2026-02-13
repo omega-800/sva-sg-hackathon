@@ -1,33 +1,30 @@
 type NodeType = "simple-node" | "start-node" | "end-node" | "decision-node" | "input-node"
 
-interface Node {
+export type Node = {
   id: string
   title?: string,
   desc?: string,
   type: NodeType
+  next: string
 }
 
-interface SimpleNode {
-  next: string,
-}
+export type StartNode = Node & { type: "start-node" }
 
-interface StartNode extends SimpleNode { }
+export type EndNode = Omit<Node, "next"> & { type: "end-node" }
 
-interface EndNode extends Node { }
-
-interface QuestionNode extends Node {
+type QuestionNode = Node & {
   question: string,
-}
+} & ({ type: "decision-node" } | { type: "input-node" })
 
-interface DecisionNode extends QuestionNode {
-  decisions: Array<SimpleNode>
-}
+type DecisionNode = Omit<QuestionNode, "next"> & {
+  decisions: Array<Node>
+} & { type: "decision-node" }
 
-interface InputNode extends QuestionNode, SimpleNode {
+type InputNode = QuestionNode & {
   input: "number" | "text" | "date"
-}
+} & { type: "input-node" }
 
-type Flowchart = Array<Node>
+export type Flowchart = Array<StartNode | EndNode | DecisionNode | InputNode>
 
 const example = [
   {id: "asdf", next: "qwer"},
