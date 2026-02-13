@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import HelloWorld from "./components/HelloWorld.vue";
+import Assess from "./pages/Assess.vue";
 </script>
 
 <template>
   <v-app>
     <v-container>
-      <HelloWorld />
+      <Assess />
     </v-container>
   </v-app>
 </template>

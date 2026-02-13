@@ -8,6 +8,8 @@ export type Node = {
   next: string
 }
 
+export type SimpleNode = Node & { type: "simple-node" }
+
 export type StartNode = Node & { type: "start-node" }
 
 export type EndNode = Omit<Node, "next"> & { type: "end-node" }
@@ -24,10 +26,4 @@ type InputNode = QuestionNode & {
   input: "number" | "text" | "date"
 } & { type: "input-node" }
 
-export type Flowchart = Array<StartNode | EndNode | DecisionNode | InputNode>
-
-const example = [
-  {id: "asdf", next: "qwer"},
-  {id: "qwer", next: "end", title: "weeeooo"},
-  {id: "end"},
-]
+export type Flowchart = Array<SimpleNode | StartNode | EndNode | DecisionNode | InputNode>

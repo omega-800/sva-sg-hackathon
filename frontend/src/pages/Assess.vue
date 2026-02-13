@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { VStepper, VCard } from 'vuetify/components'
-import StepOne from './StepOne.vue'
+import StepOne from '../components/StepOne.vue'
 import { useFlowStore } from '../stores/flow'
 const radios = ref('one')
 
