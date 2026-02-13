@@ -56,6 +56,7 @@
             typescript
             typescript-language-server
             nodejs_24
+            vue-language-server
           ];
           env = {
             RUST_BACKTRACE = 1;
@@ -84,7 +85,7 @@
           };
           frontend = pkgs.writeShellApplication {
             name = "frontend";
-            text = "npm run --prefix ./frontend start";
+            text = "npm run --prefix ./frontend dev";
           };
           frontend-dev = frontend;
           backend-dev = pkgs.writeShellApplication {
