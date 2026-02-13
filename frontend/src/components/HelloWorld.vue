@@ -42,5 +42,21 @@ onMounted(async () => {
         </v-stepper-window-item>
       </v-stepper-window>
     </v-stepper>
-  </v-app>
 </template>
+
+<style>
+.v-stepper-item__avatar {
+  background-color: var(--st-gallen-red) !important;
+}
+.v-card-title {
+  color: var(--st-gallen-red);
+  font-weight: bold;
+}
+.v-stepper-actions .v-btn{
+  background-color: var(--st-gallen-red2);
+  color: white;
+}
+.v-stepper-actions .v-btn:hover {
+  background-color: var(--st-gallen-red);
+}
+</style>

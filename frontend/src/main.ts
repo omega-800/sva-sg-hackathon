@@ -22,6 +22,13 @@ const vuetify = createVuetify({
     directives,
     theme: {
         defaultTheme: 'light',
+        themes: {
+            light: {
+                colors: {
+                    primary: '#e30613',
+                },
+            },
+        },
     },
     icons: {
         defaultSet: 'mdi',
