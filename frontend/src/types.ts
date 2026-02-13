@@ -1,17 +1,34 @@
-type NodeType =
+export type NodeType =
   | "simple-node"
   | "start-node"
   | "end-node"
   | "decision-node"
+  | "repeat-node"
   | "input-node";
+
+export type Prim = number | string | boolean;
+export type Operation =
+  | {
+      op: "if";
+      val: Operation | Prim | Array<string>;
+      lhs: Operation | Prim | Array<string>;
+      rhs: Operation | Prim | Array<string>;
+    }
+  | {
+      op: "sub" | "add" | "lt" | "gt" | "eq";
+      lhs: Operation | Prim | Array<string>;
+      rhs: Operation | Prim | Array<string>;
+    };
 
 export type Node = {
   id: string;
   title?: string;
   desc?: string;
   type: NodeType;
-  next: string;
+  next: string | Operation;
 };
+
+export type RepeatNode = Node & { sub: Node; n: Operation | number | Array<string>; type: "repeat-node" };
 
 export type SimpleNode = Node & { type: "simple-node" };
 
@@ -29,12 +46,26 @@ type DecisionNode = Omit<QuestionNode, "next"> & {
   decisions: Array<Node>;
 } & { type: "decision-node" };
 
-type InputNode = QuestionNode & {
-  input: "number" | "text" | "date";
-} & { type: "input-node" };
+type InputNode = QuestionNode & { type: "input-node" } & (
+    | {
+        input: "number" | "text" | "date";
+      }
+    | {
+        input: "radio" | "checkbox";
+        choices: Array<{
+          title: string;
+          value: any;
+        }>;
+      }
+    | {
+        input: "range";
+        from: number;
+        to: number;
+      }
+  );
 
 export type Flowchart = Array<
-  SimpleNode | StartNode | EndNode | DecisionNode | InputNode
+  RepeatNode | SimpleNode | StartNode | EndNode | DecisionNode | InputNode
 >;
 
 // export type Rules = {
@@ -66,6 +97,9 @@ export type UserData = {
     lohn: number;
     pensum: number;
     plz: number;
+    // TODO:
+    verpflegung: number;
+    fahrspesen: number;
   };
   vermoegen: {
     vorhanden: boolean;
