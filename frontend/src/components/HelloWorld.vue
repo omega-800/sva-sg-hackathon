@@ -15,24 +15,9 @@ onMounted(async () => {
   steps.value = flowStore.getTitles
 })
 
-
 </script>
 
 <template>
-<<<<<<< HEAD
-    <v-stepper alt-labels editable :items="steps">
-      <template v-slot:item.1>
-        <v-card title="Step One" flat><StepOne /></v-card>
-      </template>
-
-      <template v-slot:item.2>
-        <v-card title="Step Two" flat><StepTwo /></v-card>
-      </template>
-
-      <template v-slot:item.3>
-        <v-card title="Step Three" flat> i try</v-card>
-      </template>
-=======
   <v-app>
     <v-stepper
       v-model="step"
@@ -55,7 +40,6 @@ onMounted(async () => {
           </v-card>
         </v-stepper-window-item>
       </v-stepper-window>
->>>>>>> refs/remotes/origin/main
     </v-stepper>
   </v-app>
 </template>
