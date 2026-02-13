@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { VStepper, VCard } from 'vuetify/components'
-import StepOne from './StepOne.vue'
-const radios = ref('one')
 
 const steps = [
   'Wohnen in Basel-Stadt',
@@ -11,20 +8,13 @@ const steps = [
   'Ausgaben',
   'Ergebnis',
 ]
+
 </script>
 
 <template>
-  <v-app>
     <v-stepper alt-labels editable :items="steps">
       <template v-slot:item.1>
-        <v-card title="Step One" flat>
-          <p>Selected Button: {{ radios }}</p>
-          <v-radio-group v-model="radios">
-            <v-radio label="Option One" value="one"></v-radio>
-            <v-radio label="Option 2 (string)" value="2"></v-radio>
-            <v-radio :value="3" label="Option 3 (integer)"></v-radio>
-          </v-radio-group>
-        </v-card>
+        <v-card title="Step One" flat></v-card>
       </template>
 
       <template v-slot:item.2>
@@ -34,8 +24,24 @@ const steps = [
       </template>
 
       <template v-slot:item.3>
-        <v-card title="Step Three" flat>...</v-card>
+        <v-card title="Step Three" flat> i try</v-card>
       </template>
     </v-stepper>
-  </v-app>
 </template>
+
+<style>
+.v-stepper-item__avatar {
+  background-color: var(--st-gallen-red) !important;
+}
+.v-card-title {
+  color: var(--st-gallen-red);
+  font-weight: bold;
+}
+.v-stepper-actions .v-btn{
+  background-color: var(--st-gallen-red2);
+  color: white;
+}
+.v-stepper-actions .v-btn:hover {
+  background-color: var(--st-gallen-red);
+}
+</style>
