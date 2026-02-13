@@ -5,12 +5,11 @@ authors = ["omega-800 <gshevoroshkin@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-async-graphql = "7.2.1"
-async-graphql-rocket = "7.2.1"
+async-graphql-poem = "7.2.1"
+dotenv = "0.15.0"
 futures = "0.3.31"
-rocket = "0.5.1"
-sea-orm = { version = "2.0.0-rc.32", features = ["sqlx-sqlite", "with-uuid", "with-chrono", "with-time", "macros", "runtime-tokio-native-tls", "schema-sync", "entity-registry", "seaography"] }
-sea-orm-migration = "1.1.19"
-seaography = "1.1.4"
-tokio = "1.49.0"
+poem = "3.1.12"
+sea-orm = { version = "~2.0.0-rc", features = ["sqlx-sqlite", "with-uuid", "with-chrono", "with-time", "macros", "runtime-tokio-native-tls", "schema-sync", "entity-registry", "seaography"] }
+seaography = { version = "~2.0.0-rc", features = ["graphql-playground","with-chrono","with-time","with-uuid","macros","schema-meta", "field-pluralize"] }
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.20.0", features = ["v4"] }
