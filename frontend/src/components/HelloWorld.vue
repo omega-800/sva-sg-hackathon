@@ -1,5 +1,18 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { VStepper, VCard } from 'vuetify/components'
+import StepOne from './StepOne.vue'
+import StepTwo from './StepTwo.vue'
+
+const activeStep = ref(1)
+
+const formData = ref({
+  wohnen: '',
+  haushalt: '',
+  vermoegen: '',
+  ausgaben: '',
+})
+
 
 const steps = [
   'Wohnen in Basel-Stadt',
@@ -14,11 +27,11 @@ const steps = [
 <template>
     <v-stepper alt-labels editable :items="steps">
       <template v-slot:item.1>
-        <v-card title="Step One" flat></v-card>
+        <v-card title="Step One" flat><StepOne /></v-card>
       </template>
 
       <template v-slot:item.2>
-        <v-card title="Step Two" flat>
+        <v-card title="Step Two" flat><StepTwo />
           <StepOne />
         </v-card>
       </template>
