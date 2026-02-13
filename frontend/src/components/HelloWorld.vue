@@ -42,6 +42,7 @@ onMounted(async () => {
         </v-stepper-window-item>
       </v-stepper-window>
     </v-stepper>
+  </v-app>
 </template>
 
 <style>
