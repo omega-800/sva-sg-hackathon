@@ -3,9 +3,7 @@ import HelloWorld from "./components/HelloWorld.vue";
 </script>
 
 <template>
-  <HelloWorld />
+  <v-app>
+    <HelloWorld />
+  </v-app>
 </template>
-
-<style scoped>
-
-</style>
