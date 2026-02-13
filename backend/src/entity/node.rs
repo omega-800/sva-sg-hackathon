@@ -1,4 +1,4 @@
-use sea_orm::entity::prelude::*;
+use sea_orm::{ActiveValue::Set, entity::prelude::*};
 use uuid::Uuid;
 
 #[derive(EnumIter, DeriveActiveEnum, Clone, Debug, PartialEq, Eq)]
@@ -24,8 +24,6 @@ pub struct Model {
     // FIXME: wonky
     #[sea_orm(has_many)]
     pub prev_simple_nodes: HasMany<super::simple_node::Entity>,
-    #[sea_orm(has_many)]
-    pub prev_end_nodes: HasMany<super::end_node::Entity>,
     #[sea_orm(has_many, via = "node_decisions")]
     pub prev_decision_nodes: HasMany<super::decision_node::Entity>,
     #[sea_orm(has_many)]
@@ -36,4 +34,11 @@ pub struct Model {
     pub flowchart: HasOne<super::flowchart::Entity>,
 }
 
-impl ActiveModelBehavior for ActiveModel {}
+impl ActiveModelBehavior for ActiveModel {
+//     fn new() -> Self {
+//         Self {
+//             id: Set(Uuid::new_v4()),
+//             ..ActiveModelTrait::default()
+//         }
+//     }
+}
