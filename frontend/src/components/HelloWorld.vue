@@ -1,41 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { VStepper, VCard } from 'vuetify/components'
 
-defineProps<{ msg: string }>()
+const steps = [
+  'Wohnen in Basel-Stadt',
+  'Haushalt',
+  'Vermögen und Einkommen',
+  'Ausgaben',
+  'Ergebnis',
+]
 
-const count = ref(0)
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+    <v-stepper alt-labels editable :items="steps">
+      <template v-slot:item.1>
+        <v-card title="Step One" flat></v-card>
+      </template>
 
-  <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
-  </div>
+      <template v-slot:item.2>
+        <v-card title="Step Two" flat>
+          <StepOne />
+        </v-card>
+      </template>
 
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Learn more about IDE Support for Vue in the
-    <a
-      href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support"
-      target="_blank"
-      >Vue Docs Scaling up Guide</a
-    >.
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+      <template v-slot:item.3>
+        <v-card title="Step Three" flat> i try</v-card>
+      </template>
+    </v-stepper>
 </template>
 
-<style scoped>
-.read-the-docs {
-  color: #888;
+<style>
+.v-stepper-item__avatar {
+  background-color: var(--st-gallen-red) !important;
+}
+.v-card-title {
+  color: var(--st-gallen-red);
+  font-weight: bold;
+}
+.v-stepper-actions .v-btn{
+  background-color: var(--st-gallen-red2);
+  color: white;
+}
+.v-stepper-actions .v-btn:hover {
+  background-color: var(--st-gallen-red);
 }
 </style>

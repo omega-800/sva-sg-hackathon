@@ -1,4 +1,6 @@
-const fetchFlow = async (): Promise<Flowchart> => new Promise<Flowchart>(r => r([
+import { Flowchart } from "./types"
+
+export const fetchFlow = (): Promise<Flowchart> => new Promise<Flowchart>(r => r([
   // TODO: descriptions
   {id: "50cded42-3326-4919-9e0a-000000000000", type: "start-node", title: "Willkommen", desc: "Anspruch auf Sozialhilfe klären", next: "50cded42-3326-4919-9e0a-000000000001"},
   {id: "50cded42-3326-4919-9e0a-000000000001", type: "decision-node", title: "Ausweis", question: "Was für einen Ausweis besitzen Sie?", decisions: [
