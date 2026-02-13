@@ -7,8 +7,10 @@ import { useFlowStore } from '../stores/flow'
 const flowStore = useFlowStore()
 
 onMounted(flowStore.fetchFlow)
+const type = ref()
 
 </script>
 
 <template>
+  <component :is="type + '-edit'" />
 </template>

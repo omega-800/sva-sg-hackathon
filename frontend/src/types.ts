@@ -16,10 +16,12 @@ export type EndNode = Omit<Node, "next"> & { type: "end-node" }
 
 type QuestionNode = Node & {
   question: string,
+  path: Array<string>,
+  op?: "add" | "set"
 } & ({ type: "decision-node" } | { type: "input-node" })
 
 type DecisionNode = Omit<QuestionNode, "next"> & {
-  decisions: Array<Node>
+  decisions: Array<Node>,
 } & { type: "decision-node" }
 
 type InputNode = QuestionNode & {
@@ -27,3 +29,18 @@ type InputNode = QuestionNode & {
 } & { type: "input-node" }
 
 export type Flowchart = Array<SimpleNode | StartNode | EndNode | DecisionNode | InputNode>
+
+// export type Rules = {
+//   
+// }
+//
+// export type Calculation = {
+//   grundbedarf: null,
+//   mietzins: null,
+//   kgv: null,
+//   vermögen: null,
+//   einkommen: null
+// }
+//
+// export type UserData = {
+// }
