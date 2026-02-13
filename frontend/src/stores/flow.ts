@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { fetchFlow } from "../api";
-import { Node, Flowchart, EndNode, DecisionNode, InputNode, StartNode } from "../types";
-import { convertNodeToQuestion } from "../utils/converter";
+import { Node, Flowchart, EndNode, InputNode, StartNode, UserData } from "../types";
 import { Question } from "../data/stepTwoData";
 
 type AnyNode = Flowchart[number];
@@ -11,7 +10,7 @@ export const useFlowStore = defineStore("flow", {
     flow: [] as Flowchart,
     path: [] as AnyNode[], // History of visited nodes + current node
     currentStepIndex: 0,   // Index in 'path' we are currently viewing/answering
-    answers: {} as Record<string, any>,
+    answers: {} as UserData
   }),
   getters: {
     startNode(): AnyNode | undefined {
@@ -75,7 +74,7 @@ export const useFlowStore = defineStore("flow", {
       // However, we can just use state accessing logic here directly.
       if (state.currentStepIndex >= 0 && state.currentStepIndex < state.path.length) {
          const node = state.path[state.currentStepIndex];
-         return convertNodeToQuestion(node);
+         return node;
       }
       return null;
     },
@@ -117,12 +116,8 @@ export const useFlowStore = defineStore("flow", {
       // Calculate the NEXT node based on this answer
       let nextId: string | undefined;
 
-      if (currentNode.type === "decision-node") {
-        const decisionNode = currentNode as DecisionNode;
-        const selectedDecision = decisionNode.decisions.find((d) => d.id === answer);
-        if (selectedDecision) nextId = selectedDecision.next;
-      } else if (currentNode.type === "input-node") {
-         nextId = (currentNode as InputNode).next;
+      if (currentNode.type === "input-node") {
+        nextId = (currentNode as InputNode).next;
       } else {
         nextId = (currentNode as Node).next;
       }

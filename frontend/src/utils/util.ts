@@ -6,6 +6,12 @@ export const isPrim = (elem: any): elem is Prim =>
 export const isObjPath = (elem: any): elem is Array<string> =>
   Array.isArray(elem) && elem.every((i) => typeof i == "string");
 
+export const setAtObjPath = (elem: object, path: Array<string>, val: any) => {
+  let cur = elem;
+  for (const k in path.slice(-1)) cur = cur[k] ??= {};
+  cur[path[path.length - 1]] = val;
+};
+
 export const getAtObjPath = (elem: object, path: Array<string>) =>
   path.reduce((acc, k) => acc?.[k], elem);
 
