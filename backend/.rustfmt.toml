@@ -1,2 +1,5 @@
 edition = "2021"
 newline_style = "Unix"
+max_width = 80
+hard_tabs = false
+tab_spaces = 2
