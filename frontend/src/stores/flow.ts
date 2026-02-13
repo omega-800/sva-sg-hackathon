@@ -26,11 +26,20 @@ export const useFlowStore = defineStore("flow", {
   },
   actions: {
     async fetchFlow() {
+      if (this.flow.length > 0) return;
       this.flow = await fetchFlow();
       this.currentNode = this.flow.find((n) => n.type === "start-node") || null;
     },
     startEditingFlow() {
-      this.prevFlow = structuredClone(this.flow) 
-    }
+      this.prevFlow = structuredClone(this.flow);
+      // this.editHistory = [];
+    },
+    cancelEditingFlow() {
+      this.flow = this.prevFlow;
+      // this.editHistory = [];
+    },
+    finishEditingFlow() {
+      // this.editHistory = [];
+    },
   },
 });

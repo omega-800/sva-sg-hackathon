@@ -4,8 +4,14 @@ import Assess from "./pages/Assess.vue";
 
 <template>
   <v-app>
+    <nav>
+      <RouterLink to="/">Assess</RouterLink>
+      <RouterLink to="/admin">Admin</RouterLink>
+    </nav>
     <v-container>
-      <Assess />
+      <main>
+        <RouterView />
+      </main>
     </v-container>
   </v-app>
 </template>
