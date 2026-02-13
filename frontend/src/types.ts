@@ -2,7 +2,6 @@ export type NodeType =
   | "simple-node"
   | "start-node"
   | "end-node"
-  | "decision-node"
   | "repeat-node"
   | "input-node";
 
@@ -36,17 +35,13 @@ export type StartNode = Node & { type: "start-node" };
 
 export type EndNode = Omit<Node, "next"> & { type: "end-node" };
 
-type QuestionNode = Node & {
+export type QuestionNode = Node & {
   question: string;
   path: Array<string>;
   op?: "add" | "set";
 } & ({ type: "decision-node" } | { type: "input-node" });
 
-type DecisionNode = Omit<QuestionNode, "next"> & {
-  decisions: Array<Node>;
-} & { type: "decision-node" };
-
-type InputNode = QuestionNode & { type: "input-node" } & (
+export type InputNode = QuestionNode & { type: "input-node" } & (
     | {
         input: "number" | "text" | "date";
       }

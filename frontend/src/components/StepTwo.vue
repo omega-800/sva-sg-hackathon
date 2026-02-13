@@ -1,76 +1,67 @@
-<script setup>
-import { ref, watch } from 'vue'
+<script setup lang="ts">
+import { reactive, watch } from 'vue'
+import type { Question } from '../data/stepTwoData'
 
-const firstRadios = ref(null)
+const props = defineProps<{
+  questions: Question[]
+  modelValue?: Record<string, any>
+  disabled?: boolean
+}>()
 
-const ageRange = ref(null)
-const degreeFinished = ref(null)
-const currentlyInTraining = ref(null)
+const emit = defineEmits(['update:modelValue'])
 
-const partnerStatus = ref(null)
-const childCount = ref(0)
-const adultCount = ref(0)
+const answers = reactive<Record<string, any>>(props.modelValue || {})
 
-watch(firstRadios, () => {
-  ageRange.value = null
-  degreeFinished.value = null
-  currentlyInTraining.value = null
-  partnerStatus.value = null
-  childCount.value = 0
-  adultCount.value = 0
-})
+// Watch for changes and emit updates
+watch(answers, (newVal) => {
+  emit('update:modelValue', newVal)
+}, { deep: true })
+
+// Simple visibility check based on parent dependency
+const isVisible = (question: Question) => {
+  if (!question.parentId) return true
+  return answers[question.parentId] === question.parentValue
+}
+
+// Reset children answers when a parent answer changes to hide them is a nice-to-have,
+// but for now, let's just purely control visibility.
+// If strict data consistency is needed (clearing hidden fields), we can add a watcher or improved logic here.
 </script>
 
 <template>
   <v-container>
-    <v-radio-group 
-      v-model="firstRadios" 
-      label="Wie viele personen leben aktuell in Ihrem Haushalt?"
-    >
-      <v-radio label="1 Person" value="1"></v-radio>
-      <v-radio label="2 Personen" value="2"></v-radio>
-    </v-radio-group>
-
-    <v-divider v-if="firstRadios" class="my-4"></v-divider>
-
-    <template v-if="firstRadios === '1'">
-      <v-radio-group v-model="ageRange" label="Wie alt sind Sie?">
-        <v-radio label="Sind Sie 18 - 25 Jahre alt?" value="1"></v-radio>
-        <v-radio label="Sind Sie 26 Jahre oder älter?" value="2"></v-radio>
-      </v-radio-group>
-
-      <div v-if="ageRange === '1'">
-        <v-radio-group v-model="degreeFinished" label="Haben Sie Ihre Erste Ausbildung abgeschlossen?">
-          <v-radio label="Ja" value="ja"></v-radio>
-          <v-radio label="Nein" value="nein"></v-radio>
+    <template v-for="question in questions" :key="question.id">
+      <div v-if="isVisible(question)" class="mb-4">
+        
+        <!-- Radio Type -->
+        <v-radio-group
+          v-if="question.type === 'radio'"
+          v-model="answers[question.id]"
+          :label="question.text"
+          :disabled="disabled"
+        >
+          <v-radio
+            v-for="option in question.options"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          ></v-radio>
         </v-radio-group>
 
-        <v-radio-group v-model="currentlyInTraining" label="Sind Sie aktuell in einer Ausbildung?">
-          <v-radio label="Ja" value="ja"></v-radio>
-          <v-radio label="Nein" value="nein"></v-radio>
-        </v-radio-group>
-      </div>
-    </template>
+        <!-- Number Inputs Type (Composite) -->
+        <div v-else-if="question.type === 'number-inputs'">
+          <p class="text-subtitle-1 mb-2">{{ question.text }}</p>
+          <template v-for="field in question.fields" :key="field.id">
+            <v-number-input
+              v-model.number="answers[field.id]"
+              :label="field.label"
+              controlVariant="stacked"
+              :disabled="disabled"
+            />
+          </template>
+        </div>
 
-    <template v-if="firstRadios === '2'">
-      <v-radio-group v-model="partnerStatus" label="Leben Sie Zusammen mit Ihrem Ehepartner?">
-        <v-radio label="Mit Ehepartner" value="1"></v-radio>
-        <v-radio label="Mit Partner (Nicht verheiratet)" value="2"></v-radio>
-        <v-radio label="Nein" value="3"></v-radio>
-      </v-radio-group>
-
-      <div class="mt-4">
-        <p class="text-subtitle-1 mb-2">Wie setzt sich Ihr Haushalt zusammen?</p>
-        <v-number-input 
-          v-model.number="childCount" 
-          label="Anzahl Kinder von 0 bis 17 Jahren" 
-          controlVariant="stacked"
-        />
-        <v-number-input 
-          v-model.number="adultCount" 
-          label="Anzahl Erwachsene ab 18 Jahren (ohne Ehepartner)" 
-          controlVariant="stacked"
-        />
+        <v-divider v-if="isVisible(question)" class="my-4"></v-divider>
       </div>
     </template>
   </v-container>
