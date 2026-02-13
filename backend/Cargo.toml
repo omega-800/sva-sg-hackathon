@@ -1,11 +1,15 @@
 [package]
-name = "innocamp-backend"
+name = "innocamp_backend"
 version = "0.1.0"
 authors = ["omega-800 <gshevoroshkin@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-actix-web = "4.12.1"
-async-graphql = "7.2.1"
-async-graphql-actix-web = "7.2.1"
+async-graphql-poem = "7.2.1"
+dotenv = "0.15.0"
+futures = "0.3.31"
+poem = "3.1.12"
+sea-orm = { version = "~2.0.0-rc", features = ["sqlx-sqlite", "with-uuid", "with-chrono", "with-time", "macros", "runtime-tokio-native-tls", "schema-sync", "entity-registry", "seaography"] }
+seaography = { version = "~2.0.0-rc", features = ["graphql-playground","with-chrono","with-time","with-uuid","macros","schema-meta", "field-pluralize"] }
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.20.0", features = ["v4"] }
