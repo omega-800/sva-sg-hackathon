@@ -82,14 +82,27 @@
             };
             cargoLock.lockFile = ./backend/Cargo.lock;
           };
-        in
-        {
-          inherit backend;
-          default = backend;
-          # TODO:
           frontend = pkgs.writeShellApplication {
             name = "frontend";
             text = "npm run --prefix ./frontend start";
+          };
+          frontend-dev = frontend;
+          backend-dev = pkgs.writeShellApplication {
+            name = "backend-dev";
+            text = "bacon --project ./backend --job run";
+          };
+        in
+        {
+          inherit
+            backend
+            frontend
+            backend-dev
+            frontend-dev
+            ;
+          default = backend;
+          dev = pkgs.writeShellApplication {
+            name = "dev";
+            text = "(trap 'kill 0' SIGINT; ${frontend-dev}/bin/frontend & ${backend-dev}/bin/backend-dev)";
           };
         }
       );
