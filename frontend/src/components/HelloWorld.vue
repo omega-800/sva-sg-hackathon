@@ -31,9 +31,7 @@ const steps = [
       </template>
 
       <template v-slot:item.2>
-        <v-card title="Step Two" flat><StepTwo />
-          <StepOne />
-        </v-card>
+        <v-card title="Step Two" flat><StepTwo /></v-card>
       </template>
 
       <template v-slot:item.3>
