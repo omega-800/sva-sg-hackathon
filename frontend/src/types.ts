@@ -16,11 +16,11 @@ type QuestionNode = Node & {
   question: string,
 } & ({ type: "decision-node" } | { type: "input-node" })
 
-type DecisionNode = Omit<QuestionNode, "next"> & {
+export type DecisionNode = Omit<QuestionNode, "next"> & {
   decisions: Array<Node>
 } & { type: "decision-node" }
 
-type InputNode = QuestionNode & {
+export type InputNode = QuestionNode & {
   input: "number" | "text" | "date"
 } & { type: "input-node" }
 

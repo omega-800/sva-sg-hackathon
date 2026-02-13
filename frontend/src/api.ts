@@ -21,12 +21,6 @@ export const fetchFlow = (): Promise<Flowchart> => new Promise<Flowchart>(r => r
     {id: "50cded42-3326-4919-9e0a-000000000014", type: "simple-node", title: "Wohngemeinschaft", next: "50cded42-3326-4919-9e0a-000000000016"},
     {id: "50cded42-3326-4919-9e0a-000000000015", type: "simple-node", title: "Freund/-in", next: "50cded42-3326-4919-9e0a-000000000016"},
   ]},
-  {id: "50cded42-3326-4919-9e0a-000000000017", type: "decision-node", title: "Finanzen", question: "Für wen sind Sie finanziell verantwortlich?", decisions: [
-    {id: "50cded42-3326-4919-9e0a-000000000018", type: "simple-node", title: "Ehepartner/-in", next: "50cded42-3326-4919-9e0a-000000000022"},
-    {id: "50cded42-3326-4919-9e0a-000000000019", type: "simple-node", title: "Kind(er)", next: "50cded42-3326-4919-9e0a-000000000022"},
-    {id: "50cded42-3326-4919-9e0a-000000000020", type: "simple-node", title: "Freund/-in", next: "50cded42-3326-4919-9e0a-000000000022"},
-    {id: "50cded42-3326-4919-9e0a-000000000021", type: "input-node", question: "Weitere", input: "text", next: "50cded42-3326-4919-9e0a-000000000022"},
-  ]},
   {id: "50cded42-3326-4919-9e0a-000000000022", type: "decision-node", title: "Wohnsituation", question: "Was ist Ihre Wohnsituation?", decisions: [
     {id: "50cded42-3326-4919-9e0a-000000000023", type: "simple-node", title: "Eigene Mietwohnung", next: "50cded42-3326-4919-9e0a-000000000016"},
     {id: "50cded42-3326-4919-9e0a-000000000024", type: "simple-node", title: "Untermiete", next: "50cded42-3326-4919-9e0a-000000000016"},
@@ -49,10 +43,6 @@ export const fetchFlow = (): Promise<Flowchart> => new Promise<Flowchart>(r => r
   {id: "50cded42-3326-4919-9e0a-000000000037", type: "decision-node", title: "Vermögen", question: "Wie hoch ist Ihr Vermögen?", decisions: [
     {id: "50cded42-3326-4919-9e0a-000000000038", type: "simple-node", title: "> CHF 4000.00", next: "50cded42-3326-4919-9e0a-000000000997"},
     {id: "50cded42-3326-4919-9e0a-000000000039", type: "simple-node", title: "< CHF 4000.00", next: "50cded42-3326-4919-9e0a-000000000040"},
-  ]},
-  {id: "50cded42-3326-4919-9e0a-000000000040", type: "end-node", title: "Vermögen", question: "Haben Sie ein Motorfahrzeug?", decisions: [
-    {id: "50cded42-3326-4919-9e0a-000000000041", type: "simple-node", title: "Ja", next: "50cded42-3326-4919-9e0a-000000000043"},
-    {id: "50cded42-3326-4919-9e0a-000000000042", type: "simple-node", title: "Nein", next: "50cded42-3326-4919-9e0a-000000999"},
   ]},
   {id: "50cded42-3326-4919-9e0a-000000000043", type: "decision-node", title: "Vermögen", question: "Wie teuer ist Ihr Motorfahrzeug?", decisions: [
     {id: "50cded42-3326-4919-9e0a-000000000044", type: "simple-node", title: "> CHF 4000.00", next: "50cded42-3326-4919-9e0a-000000000997"},
