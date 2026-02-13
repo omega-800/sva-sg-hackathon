@@ -15,7 +15,6 @@ onMounted(async () => {
   steps.value = flowStore.getTitles
 })
 
-
 </script>
 
 <template>
