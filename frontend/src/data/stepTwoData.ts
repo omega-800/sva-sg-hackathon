@@ -13,7 +13,7 @@ export interface QuestionField {
 export interface Question {
   id: string;
   text: string;
-  type: 'radio' | 'number-inputs';
+  type: 'radio' | 'inputs';
   options?: QuestionOption[];
   fields?: QuestionField[];
   parentId?: string;
@@ -80,7 +80,7 @@ export const stepTwoQuestions: Question[] = [
     parentId: 'household_size',
     parentValue: '2',
     text: 'Wie setzt sich Ihr Haushalt zusammen?',
-    type: 'number-inputs',
+    type: 'inputs',
     fields: [
       { id: 'child_count', label: 'Anzahl Kinder von 0 bis 17 Jahren', type: 'number' },
       { id: 'adult_count', label: 'Anzahl Erwachsene ab 18 Jahren (ohne Ehepartner)', type: 'number' }

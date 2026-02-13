@@ -20,7 +20,7 @@ export const convertNodeToQuestion = (node: AnyNode): Question | null => {
     return {
       id: inputNode.id,
       text: inputNode.question,
-      type: "number-inputs",
+      type: "inputs",
       fields: [
         {
           id: inputNode.id, // Use node ID as field ID for simplicity
