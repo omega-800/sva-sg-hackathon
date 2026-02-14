@@ -6,7 +6,6 @@ import StepTwo from '../components/StepTwo.vue'
 
 const flowStore = useFlowStore()
 
-const currentAnswers = ref<Record<string, any>>({})
 const step = ref(1)
 
 onMounted(async () => {
@@ -37,7 +36,7 @@ watch(currentGroupIndex, (newIndex) => {
 const handleNext = () => {
   const currentNode = flowStore.currentNode
   if (!currentNode) return
-  flowStore.submitAnswer(currentAnswers.value)
+  flowStore.submitAnswer(null)
 }
 
 const handleBack = () => {
@@ -55,21 +54,6 @@ const handleJump = (groupIndex: number) => {
 const handleProcedeWithoutAnswer = () => {
   flowStore.submitAnswer(null)
 }
-
-// Watch global answers to sync local state
-watch(() => flowStore.answers, (newAnswers) => {
-  // Deep merge or replace?
-  // flowStore.answers is the source of truth.
-  // currentAnswers is a ref to a Record.
-  // If we replace it, we lose reactivity if passed as prop?
-  // But StepTwo takes modelValue.
-  // Let's just update keys.
-  // Actually, object assign is fine.
-  // But StepTwo uses deep paths.
-  // If we replace root object, it should be fine.
-  currentAnswers.value = JSON.parse(JSON.stringify(newAnswers))
-}, { deep: true, immediate: true })
-
 </script>
 
 <template>
@@ -82,66 +66,87 @@ watch(() => flowStore.answers, (newAnswers) => {
               :editable="true" @click="handleJump(index)"></v-stepper-item>
             <v-divider v-if="index < titles.length - 1"></v-divider>
           </template>
-        </v-stepper-header>
+</v-stepper-header>
 
-        <v-stepper-window v-model="step">
-          <v-stepper-window-item v-for="(group, index) in groupedPath" :key="index" :value="index + 1">
-            <v-card flat>
-              <v-card-text>
-                <!-- Loop through nodes in this group -->
-                <template v-for="(nodeItem, nodeIndex) in group.nodes" :key="nodeItem.index">
+<v-stepper-window v-model="step">
+  <v-stepper-window-item v-for="(group, index) in groupedPath" :key="index" :value="index + 1">
+    <v-card flat>
+      <v-card-text>
+        <!-- Loop through nodes in this group -->
+        <template v-for="(nodeItem, nodeIndex) in group.nodes" :key="nodeItem.index">
 
-                  <!-- Question Node -->
-                  <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
-                    <StepTwo :node="nodeItem.node" :modelValue="currentAnswers"
-                      @update:modelValue="val => currentAnswers = val"
-                      :disabled="nodeItem.index < flowStore.currentStepIndex" />
+                         <!-- Question Node -->
+                         <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
+                             <StepTwo 
+                                :node="nodeItem.node"
+                                :disabled="nodeItem.index < flowStore.currentStepIndex"
+                             />
+                             
+                             <div v-if="nodeItem.index === flowStore.currentStepIndex" class="d-flex justify-space-between mt-4">
+                                 <v-btn v-if="flowStore.currentStepIndex > 0" variant="text" @click="handleBack">Zurück</v-btn>
+                                 <v-spacer v-else></v-spacer>
+                                 <v-btn color="primary" @click="handleNext">Weiter</v-btn>
+                             </div>
+                         </div>
+                         
+                         <!-- Description/Start Node -->
+                         <div v-else-if="nodeItem.node.type !== 'input-node' && nodeItem.node.type !== 'end-node'" class="mb-6">
+                            <p v-if="nodeItem.node.desc">{{ nodeItem.node.desc }}</p>
+                             <div v-if="nodeItem.index === flowStore.currentStepIndex" class="d-flex justify-space-between mt-4">
+                                 <v-btn v-if="flowStore.currentStepIndex > 0" variant="text" @click="handleBack">Zurück</v-btn>
+                                 <v-spacer v-else></v-spacer>
+                                 <v-btn color="primary" @click="handleProcedeWithoutAnswer">Starten</v-btn>
+                             </div>
+                         </div>
+                    </template>
 
-                    <div v-if="nodeItem.index === flowStore.currentStepIndex" class="d-flex justify-space-between mt-4">
-                      <v-btn v-if="flowStore.currentStepIndex > 0" variant="text" @click="handleBack">Zurück</v-btn>
-                      <v-spacer v-else></v-spacer>
-                      <v-btn color="primary" @click="handleNext">Weiter</v-btn>
-                    </div>
-                  </div>
+        <!-- End Node Case -->
+        <div v-if="flowStore.isEndNode && index === groupedPath.length - 1" class="mt-4">
+                         <p>Ende</p>
+                         <div class="d-flex justify-start mt-4">
+                            <v-btn variant="text" @click="handleBack">Zurück</v-btn>
+                         </div>
+        </div>
+        </div>
 
-                  <!-- Description/Start Node -->
-                  <div v-else-if="nodeItem.node.type !== 'input-node' && nodeItem.node.type !== 'end-node'"
-                    class="mb-6">
+        <!-- Description/Start Node -->
+        <div v-else-if="nodeItem.node.type !== 'input-node' && nodeItem.node.type !== 'end-node'" class="mb-6">
                     <p v-if="nodeItem.node.desc">{{ nodeItem.node.desc }}</p>
                     <div v-if="nodeItem.index === flowStore.currentStepIndex" class="d-flex justify-space-between mt-4">
                       <v-btn v-if="flowStore.currentStepIndex > 0" variant="text" @click="handleBack">Zurück</v-btn>
                       <v-spacer v-else></v-spacer>
                       <v-btn color="primary" @click="handleProcedeWithoutAnswer">Starten</v-btn>
                     </div>
-                  </div>
-                </template>
+        </div>
+        </template>
 
-                <!-- End Node Case -->
-                <div v-if="flowStore.isEndNode && index === groupedPath.length - 1" class="mt-4">
+        <!-- End Node Case -->
+        <div v-if="flowStore.isEndNode && index === groupedPath.length - 1" class="mt-4">
                   <p>Ende</p>
                   <div class="d-flex justify-start mt-4">
                     <v-btn variant="text" @click="handleBack">Zurück</v-btn>
                   </div>
-                </div>
+        </div>
 
-              </v-card-text>
-            </v-card>
-          </v-stepper-window-item>
-        </v-stepper-window>
-      </template>
-      <template v-slot:actions>
-      </template>
-    </v-stepper>
-    <div v-else class="d-flex justify-center align-center h-100">
+      </v-card-text>
+    </v-card>
+  </v-stepper-window-item>
+</v-stepper-window>
+</template>
+<template v-slot:actions>
+</template>
+</v-stepper>
+<div v-else class="d-flex justify-center align-center h-100">
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
-  </v-app>
+</v-app>
 </template>
 
 <style>
-.v-card-text{
+.v-card-text {
   background-color: var(--st-gallen-bg);
 }
+
 .v-stepper {
   background-color: var(--st-gallen-bg);
 }
