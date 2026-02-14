@@ -44,9 +44,13 @@ export const evalFlowOperation = (
   const op = o.op;
   const lhs = evalFlowOperation(ctx, o.lhs);
   const rhs = evalFlowOperation(ctx, o.rhs);
-  const val = "val" in o ? evalFlowOperation(ctx, o.val) : undefined;
 
-  if (op == "if") {
+  if (op == "all" || op == "some") {
+    const val = "val" in o ? o.val.map((v) => evalFlowOperation(ctx, v)) : [];
+    const res = op == "all" ? val.every((v) => v) : val.some((v) => v);
+    return res ? lhs : rhs;
+  } else if (op == "if") {
+    const val = "val" in o ? evalFlowOperation(ctx, o.val) : undefined;
     return val ? lhs : rhs;
   } else if (op == "sub") {
     return lhs - rhs;
@@ -58,5 +62,9 @@ export const evalFlowOperation = (
     return lhs > rhs;
   } else if (op == "eq") {
     return lhs == rhs;
+  } else if (op == "div") {
+    return lhs / rhs;
+  } else if (op == "mul") {
+    return lhs * rhs;
   }
 };

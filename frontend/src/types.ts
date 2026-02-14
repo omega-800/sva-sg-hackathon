@@ -14,7 +14,13 @@ export type Operation =
       rhs: Operation | Prim | Array<string>;
     }
   | {
-      op: "sub" | "add" | "lt" | "gt" | "eq";
+      op: "all" | "some";
+      val: Array<Operation | Prim | Array<string>>;
+      lhs: Operation | Prim | Array<string>;
+      rhs: Operation | Prim | Array<string>;
+    }
+  | {
+      op: "sub" | "add" | "lt" | "gt" | "eq" | "div" | "mul";
       lhs: Operation | Prim | Array<string>;
       rhs: Operation | Prim | Array<string>;
     };
@@ -77,22 +83,22 @@ export type Flowchart = Array<
 
 export type UserData = {
   personalien: {
-    ausweis: string;
+    ausweis: "CH"|"C"|"B"|"B'"|"F"|"F'"|"S";
     alter: number;
   };
   finanzen: {
     personen: number;
+    extraPersonen: Array<"E"|"K"|"F">
   };
   wohnen: {
     wohnort: string;
-    wohnform: string;
+    wohnform: "W"|"M"|"U"|"P"|"H"|"O"|"G";
   };
   arbeit: {
     taetig: boolean;
     lohn: number;
     pensum: number;
     plz: number;
-    // TODO:
     verpflegung: number;
     fahrspesen: number;
   };

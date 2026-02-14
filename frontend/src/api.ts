@@ -183,10 +183,26 @@ export const fetchFlow = (): Promise<Flowchart> =>
         question: "Pensum",
         path: ["arbeit", "pensum"],
         input: "number",
-        next: "50cded42-3326-4919-9e0a-000000000033",
+        next: "50cded42-3326-4919-9e0a-000000000100",
       },
       {
-        id: "50cded42-3326-4919-9e0a-000000000033",
+        id: "50cded42-3326-4919-9e0a-000000000100",
+        type: "input-node",
+        question: "Verpflegung",
+        path: ["arbeit", "verpflegung"],
+        input: "number",
+        next: "50cded42-3326-4919-9e0a-000000000101",
+      },
+      {
+        id: "50cded42-3326-4919-9e0a-000000000101",
+        type: "input-node",
+        question: "Fahrspesen",
+        path: ["arbeit", "fahrspesen"],
+        input: "number",
+        next: "50cded42-3326-4919-9e0a-0000000000102",
+      },
+      {
+        id: "50cded42-3326-4919-9e0a-000000000102",
         type: "input-node",
         question: "PLZ Arbeitsort",
         path: ["arbeit", "plz"],
@@ -224,16 +240,17 @@ export const fetchFlow = (): Promise<Flowchart> =>
         title: "Vermögen",
         path: ["vermoegen", "betrag"],
         question: "Wie hoch ist Ihr Vermögen?",
-        next: {
-          op: "if",
-          val: {
-            op: "gt",
-            lhs: ["vermoegen", "betrag"],
-            rhs: 4000,
-          },
-          lhs: "50cded42-3326-4919-9e0a-000000000997",
-          rhs: "50cded42-3326-4919-9e0a-000000000040",
-        },
+        next: "50cded42-3326-4919-9e0a-000000000040",
+        // next: {
+        //   op: "if",
+        //   val: {
+        //     op: "gt",
+        //     lhs: ["vermoegen", "betrag"],
+        //     rhs: 4000,
+        //   },
+        //   lhs: "50cded42-3326-4919-9e0a-000000000997",
+        //   rhs: "50cded42-3326-4919-9e0a-000000000040",
+        // },
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000040",
@@ -246,7 +263,7 @@ export const fetchFlow = (): Promise<Flowchart> =>
           op: "if",
           val: ["vermoegen", "fahrzeug", "vorhanden"],
           lhs: "50cded42-3326-4919-9e0a-000000000043",
-          rhs: "50cded42-3326-4919-9e0a-000000000999",
+          rhs: "50cded42-3326-4919-9e0a-000000000996",
         },
         choices: [
           {
@@ -259,26 +276,97 @@ export const fetchFlow = (): Promise<Flowchart> =>
           },
         ],
       },
-      {                                 
+      {
         id: "50cded42-3326-4919-9e0a-000000000043",
         type: "input-node",
         input: "number",
         title: "Vermögen",
         question: "Wie teuer ist Ihr Motorfahrzeug?",
         path: ["vermoegen", "fahrzeug", "betrag"],
+        next: "50cded42-3326-4919-9e0a-000000000996",
+        // next: {
+        //   op: "if",
+        //   val: {
+        //     op: "gt",
+        //     lhs: {
+        //       op: "add",
+        //       lhs: ["vermoegen", "betrag"],
+        //       rhs: ["vermoegen", "fahrzeug", "betrag"],
+        //     },
+        //     rhs: 4000,
+        //   },
+        //   lhs: "50cded42-3326-4919-9e0a-000000000997",
+        //   rhs: "50cded42-3326-4919-9e0a-000000000998",
+        // },
+      },
+      {
+        id: "50cded42-3326-4919-9e0a-000000000996",
+        type: "simple-node",
+        title: "Kalkulieren",
         next: {
-          op: "if",
-          val: {
-            op: "gt",
-            lhs: {
-              op: "add",
-              lhs: ["vermoegen", "betrag"],
-              rhs: ["vermoegen", "fahrzeug", "betrag"],
+          op: "all",
+          val: [
+            {
+              op: "lt",
+              lhs: {
+                op: "add",
+                lhs: ["vermoegen", "betrag"],
+                rhs: ["vermoegen", "fahrzeug", "betrag"],
+              },
+              rhs: {
+                op: "if",
+                val: {
+                  op: "gt",
+                  lhs: ["finanzen", "personen"],
+                  rhs: 0,
+                },
+                lhs: {
+                  op: "if",
+                  val: {
+                    op: "gt",
+                    lhs: ["finanzen", "personen"],
+                    rhs: 1,
+                  },
+                  lhs: 10000,
+                  rhs: {
+                    op: "if",
+                    val: {
+                      op: "eq",
+                      lhs: ["finanzen", "extraPersonen"],
+                      rhs: ["K"],
+                    },
+                    lhs: 6000,
+                    rhs: 8000,
+                  },
+                },
+                rhs: 4000,
+              },
             },
-            rhs: 4000,
-          },
-          lhs: "50cded42-3326-4919-9e0a-000000000997",
-          rhs: "50cded42-3326-4919-9e0a-000000000998",
+            {
+              op: "lt",
+              lhs: {
+                op: "div",
+                lhs: {
+                  op: "mul",
+                  lhs: ["arbeit", "lohn"],
+                  rhs: {
+                    op: "if",
+                    val: {
+                      op: "lt",
+                      lhs: ["personalien", "alter"],
+                      rhs: 18,
+                    },
+                    lhs: 2,
+                    rhs: 1,
+                  },
+                },
+                rhs: ["arbeit", "pensum"],
+              },
+              rhs: 4,
+            },
+          ],
+          lhs: "50cded42-3326-4919-9e0a-000000000998",
+          rhs: "50cded42-3326-4919-9e0a-000000000997",
         },
       },
       {
@@ -299,4 +387,3 @@ export const fetchFlow = (): Promise<Flowchart> =>
     ]),
   );
 
-// export const fetchRules = (): Promise<Rules> => new Promise<Rules>(r => r({}))
