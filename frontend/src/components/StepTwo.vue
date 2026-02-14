@@ -82,3 +82,13 @@ const answer = computed({
       </div>
   </v-container>
 </template>
+
+<style>
+.v-label {
+  color: black;
+}
+
+.mdi-radiobox-marked {
+  color: var(--st-gallen-red);
+}
+</style>
