@@ -1,85 +1,84 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
-import type { Question } from '../data/stepTwoData'
+import { computed } from 'vue'
+import type { InputNode } from '../types'
+import { getAtObjPath, setAtObjPath } from '../utils/util'
 
 const props = defineProps<{
-  questions: Question[]
-  modelValue?: Record<string, any>
+  node: InputNode
+  modelValue: Record<string, any>
   disabled?: boolean
 }>()
 
+console.log(props.node)
+
 const emit = defineEmits(['update:modelValue'])
 
-const answers = reactive<Record<string, any>>(props.modelValue || {})
+// Computed property to get/set value at specific path
+const answer = computed({
+  get() {
+    const val = getAtObjPath(props.modelValue, props.node.path)
+    // console.log('StepTwo get', props.node.path, val)
+    return val ?? null // Return null if undefined for correct v-model binding
+  },
+  set(val) {
+    console.log('StepTwo set', props.node.path, val, 'disabled:', props.disabled)
+    // Create a deep copy to avoid direct mutation of prop if possible, 
+    // but here we are modifying the object structure.
+    // We emit the WHOLE updated modelValue.
+    // Ideally we clone modelValue, set path, emit.
+    const newValue = JSON.parse(JSON.stringify(props.modelValue))
+    setAtObjPath(newValue, props.node.path, val)
+    emit('update:modelValue', newValue)
+  }
+})
 
-// Watch for changes and emit updates
-watch(answers, (newVal) => {
-  emit('update:modelValue', newVal)
-}, { deep: true })
-
-// Simple visibility check based on parent dependency
-const isVisible = (question: Question) => {
-  if (!question.parentId) return true
-  return answers[question.parentId] === question.parentValue
-}
-
-// Reset children answers when a parent answer changes to hide them is a nice-to-have,
-// but for now, let's just purely control visibility.
-// If strict data consistency is needed (clearing hidden fields), we can add a watcher or improved logic here.
 </script>
 
 <template>
   <v-container>
-    <template v-for="question in questions" :key="question.id">
-      <div v-if="isVisible(question)" class="mb-4">
+      <div class="mb-4">
         
-        <!-- Radio Type -->
+        <!-- Radio Input -->
         <v-radio-group
-          v-if="question.type === 'radio'"
-          v-model="answers[question.id]"
-          :label="question.text"
+          v-if="node.input === 'radio'"
+          v-model="answer"
+          :label="node.question"
           :disabled="disabled"
         >
           <v-radio
-            v-for="option in question.options"
+            v-for="option in node.choices"
             :key="option.value"
-            :label="option.label"
+            :label="option.title"
             :value="option.value"
           ></v-radio>
         </v-radio-group>
 
-        <!-- Inputs Group Type (Composite) -->
-        <div v-else-if="question.type === 'inputs'">
-          <p class="text-subtitle-1 mb-2">{{ question.text }}</p>
-          <template v-for="field in question.fields" :key="field.id">
-            <!-- Number Input -->
-            <v-number-input
-              v-if="field.type === 'number'"
-              v-model.number="answers[field.id]"
-              :label="field.label"
-              controlVariant="stacked"
-              :disabled="disabled"
-            />
-             <!-- Date Input -->
-             <v-text-field
-              v-else-if="field.type === 'date'"
-              v-model="answers[field.id]"
-              :label="field.label"
-              type="date"
-              :disabled="disabled"
-            />
-            <!-- Text Input (Default) -->
-            <v-text-field
-              v-else
-              v-model="answers[field.id]"
-              :label="field.label"
-              :disabled="disabled"
-            />
-          </template>
-        </div>
+        <!-- Number Input -->
+        <v-number-input
+          v-else-if="node.input === 'number'"
+          v-model.number="answer"
+          :label="node.question"
+          controlVariant="stacked"
+          :disabled="disabled"
+        />
 
-        <v-divider v-if="isVisible(question)" class="my-4"></v-divider>
+        <!-- Date Input -->
+        <v-text-field
+          v-else-if="node.input === 'date'"
+          v-model="answer"
+          :label="node.question"
+          type="date"
+          :disabled="disabled"
+        />
+
+        <!-- Text Input (Default) -->
+        <v-text-field
+          v-else
+          v-model="answer"
+          :label="node.question"
+          :disabled="disabled"
+        />
+
       </div>
-    </template>
   </v-container>
 </template>

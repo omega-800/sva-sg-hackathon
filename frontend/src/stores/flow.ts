@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { fetchFlow } from "../api";
-import { Node, Flowchart, EndNode, InputNode, StartNode, UserData } from "../types";
-import { Question } from "../data/stepTwoData";
+import { Node, Flowchart, EndNode, InputNode, StartNode, UserData, RepeatNode } from "../types";
+import { evalFlowOperation } from "../utils/util";
 
 type AnyNode = Flowchart[number];
 
@@ -74,19 +74,6 @@ export const useFlowStore = defineStore("flow", {
       }
       return null;
     },
-    // Returns the current question object for StepTwo based on currentNode
-    currentQuestion: (state): Question | null => {
-      // Access getter logic via 'this' if possible, or replicate check
-      // Pinia getters receive 'state'. To access other getters, use 'this'.
-      // But inside arrow function 'this' might be tricky. 
-      // Safest to re-evaluate or use `function(state) { ... }` style for 'this'.
-      // However, we can just use state accessing logic here directly.
-      if (state.currentStepIndex >= 0 && state.currentStepIndex < state.path.length) {
-         const node = state.path[state.currentStepIndex];
-         return node;
-      }
-      return null;
-    },
     isEndNode: (state) => {
         if (state.currentStepIndex >= 0 && state.currentStepIndex < state.path.length) {
             return state.path[state.currentStepIndex].type === "end-node";
@@ -109,59 +96,144 @@ export const useFlowStore = defineStore("flow", {
       this.answers = {};
     },
 
-    submitAnswer(answer: any) {
+    async submitAnswer(answer: any) {
       const currentNode = this.currentNode;
       if (!currentNode || currentNode.type === "end-node") return;
 
-      // 1. Check if we are changing an existing answer in history
-      // or if we are just moving forward from the latest step.
+      // 1. Store the new answer
+      // Use setAtObjPath if we need deep setting?
+      // But this.answers is the root context.
+      // And currentNode might NOT have a 'path'.
+      // If it's a generic node, we store by ID?
+      // Logic in StepTwo uses 'path' to bind 'v-model'. 
+      // So 'answer' passed here is actually the WHOLE 'modelValue' (currentAnswers) from Assess.vue
+      // which is a copy of flowStore.answers.
+      // So we can just merge/rewrite this.answers?
+      // Assess.vue: `flowStore.submitAnswer(currentAnswers.value)`
+      // So `answer` IS `UserData`.
+      this.answers = JSON.parse(JSON.stringify(answer));
+
+      // 2. Resolve NEXT node(s)
+      const nextId = evalFlowOperation(this.answers, currentNode.next);
       
-      const existingAnswer = this.answers[currentNode.id];
-      const answerChanged = JSON.stringify(existingAnswer) !== JSON.stringify(answer);
-
-      // Store the new answer
-      this.answers[currentNode.id] = answer;
-
-      // Calculate the NEXT node based on this answer
-      let nextId: string | undefined;
-
-      if (currentNode.type === "input-node") {
-        nextId = (currentNode as InputNode).next;
-      } else {
-        nextId = (currentNode as Node).next;
-      }
-
       if (!nextId) {
+          // If explicitly null/undefined, maybe end?
           console.warn("No next node found");
           return;
       }
-      const nextNode = this.flow.find((n) => n.id === nextId);
-      if (!nextNode) {
-          console.warn("Next node not found in flow", nextId);
-          return;
+
+      // Helper to recursively expand nodes
+      const expandNodes = (startId: string): AnyNode[] => {
+          const node = this.flow.find((n: AnyNode) => n.id === startId);
+          if (!node) return [];
+
+          if (node.type === 'repeat-node') {
+              // Expand RepeatNode
+              const repeatNode = node as any; // Cast to RepeatNode
+              const count = evalFlowOperation(this.answers, repeatNode.n) || 0;
+              const subNode = repeatNode.sub;
+              
+              const expanded: AnyNode[] = [];
+              for (let i = 0; i < count; i++) {
+                  const newNode = JSON.parse(JSON.stringify(subNode));
+                  newNode.id = `${repeatNode.id}_${i}`;
+                  if (!newNode.title) newNode.title = repeatNode.title;
+                  
+                  // Append index to path if path exists
+                  if (newNode.path && Array.isArray(newNode.path)) {
+                      newNode.path = [...newNode.path, i.toString()];
+                  }
+                  
+                  // Chain next pointers
+                  if (i < count - 1) {
+                      newNode.next = `${repeatNode.id}_${i+1}`;
+                  } else {
+                      // Last one points to repeatNode.next
+                      newNode.next = repeatNode.next; 
+                  }
+                  
+                  // Register in flow if not exists
+                  if (!this.flow.find((n: AnyNode) => n.id === newNode.id)) {
+                      this.flow.push(newNode);
+                  } else {
+                      // Update existing in case logic changed?
+                      // Important if 'next' pointers need update due to 'count' change.
+                      const idx = this.flow.findIndex((n: AnyNode) => n.id === newNode.id);
+                      if (idx !== -1) this.flow[idx] = newNode;
+                  }
+                  
+                  // Recursively expand this new node?
+                  // If subNode was a RepeatNode (nested), we would need to.
+                  // But 'newNode' is the generic 'sub'. 
+                  // If 'sub' is RepeatNode, 'newNode' is RepeatNode. 
+                  // So yes, recursive expansion needed if type is repeat-node.
+                  if (newNode.type === 'repeat-node') {
+                       expanded.push(...expandNodes(newNode.id));
+                  } else {
+                       expanded.push(newNode);
+                  }
+              }
+              
+              // If count is 0, we skip this repeat node and go to its next
+              if (count === 0) {
+                  // Resolve next of repeat node
+                   const nextNextId = evalFlowOperation(this.answers, repeatNode.next);
+                   if (nextNextId) {
+                       expanded.push(...expandNodes(nextNextId));
+                   }
+              }
+              
+              return expanded;
+          } else {
+              // Regular node
+              return [node];
+          }
+      };
+
+      const nextNodes = expandNodes(nextId);
+      
+      if (nextNodes.length === 0) {
+           console.warn("Next resolution resulted in empty steps");
+           return;
       }
 
-      // If we are NOT at the end of the path (editing history)
+      // 3. Update Path / Divergence Check
+      // We take the first node from expanded list as the target "next" step.
+      // If we have multiple (from repeat), we want to append them all sequence-wise?
+      // Standard flow logic: Only append what we visit.
+      // But for RepeatNode, we effectively "visit" the expansion decision.
+      // If we are at Step A. Next is Repeat -> expands to B, C.
+      // We should show B.
+      // When B is answered, it will naturally go to C (because we linked next of B to C).
+      // So we only need to append B to the path?
+      // And 'submitAnswer(B)' will find C.
+      // YES.
+      // EXCEPT if we are verifying "path divergence" for future nodes.
+      // If path was [A, B, C].
+      // We are at A. Expand -> [B', C'].
+      // if B == B', we go to B.
+      // But we should ensure C' is also consistent?
+      // Actually 'submitAnswer(B)' handles C when we get there.
+      // The only risk is if we "jump" over nodes? No.
+      // So we just handle the FIRST node of the sequence.
+      
+      const targetNextNode = nextNodes[0];
+
       if (this.currentStepIndex < this.path.length - 1) {
-          // Check if the next node in the existing path is the SAME as what we just calculated
           const nextNodeInPath = this.path[this.currentStepIndex + 1];
-          
-          if (answerChanged || nextNodeInPath.id !== nextNode.id) {
-              // DIVERGENCE! Truncate history
-              // Remove everything after current node
-              this.path = this.path.slice(0, this.currentStepIndex + 1);
-              // Append new next node
-              this.path.push(nextNode);
-              this.currentStepIndex++;
+          if (nextNodeInPath.id !== targetNextNode.id) {
+               // Divergence
+               this.path = this.path.slice(0, this.currentStepIndex + 1);
+               this.path.push(targetNextNode);
+               this.currentStepIndex++;
           } else {
-              // NO DIVERGENCE. Just move forward without modifying path
-              this.currentStepIndex++;
+               // On track
+               this.currentStepIndex++;
           }
       } else {
-          // We are at the end of the path (latest step). Just append.
-          // Don't duplicate if for some reason it's already there (though logic above prevents currentStepIndex < length-1)
-          this.path.push(nextNode);
-          this.currentStepIndex++;
+           // Append
+           this.path.push(targetNextNode);
+           this.currentStepIndex++;
       }
     },
 

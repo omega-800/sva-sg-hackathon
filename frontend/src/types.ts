@@ -60,7 +60,7 @@ export type InputNode = QuestionNode & { type: "input-node" } & (
   );
 
 export type Flowchart = Array<
-  RepeatNode | SimpleNode | StartNode | EndNode | DecisionNode | InputNode
+  RepeatNode | SimpleNode | StartNode | EndNode | InputNode
 >;
 
 // export type Rules = {
