@@ -9,7 +9,7 @@ import {
   UserData,
   RepeatNode,
 } from "../types";
-import { evalFlowOperation, setAtObjPath } from "../utils/util";
+import { evalFlowOperation, setAtObjPath, deepMerge } from "../utils/util";
 
 type AnyNode = Flowchart[number];
 
@@ -57,6 +57,8 @@ export const useFlowStore = defineStore("flow", {
       let lastTitle = "";
 
       state.path.forEach((node, index) => {
+        if (node.type === "eval-node") return;
+
         // Inherit title if missing
         let title = node.title;
         if (!title || title.trim() === "") {
@@ -117,7 +119,10 @@ export const useFlowStore = defineStore("flow", {
       } else {
         this.path = [];
       }
-      this.answers = {};
+      this.answers = {} as UserData;
+
+      // Start processing if start node or sequence starts with eval-nodes
+      this.processAutoNodes();
     },
     submitAnswerAt(
       path: Array<string>,
@@ -126,8 +131,91 @@ export const useFlowStore = defineStore("flow", {
     ) {
       setAtObjPath(this.answers, path, answer, op);
     },
-    setAnswer(answer:any){
-      if (!!answer) this.answers = answer;
+    setAnswer(answer: any) {
+      if (!!answer) {
+        // We use deepMerge to preserve existing structure and ensure reactivity is handled correctly
+        this.answers = deepMerge(JSON.parse(JSON.stringify(this.answers)), answer);
+      }
+    },
+    // Internal helper to expand repeat-nodes
+    _expandNodes(startId: string): AnyNode[] {
+      const node = this.flow.find((n: AnyNode) => n.id === startId);
+      if (!node) return [];
+
+      if (node.type === "repeat-node") {
+        const repeatNode = node as any;
+        const count = evalFlowOperation(this.answers, repeatNode.n) || 0;
+        const subNode = repeatNode.sub;
+
+        const expanded: AnyNode[] = [];
+        for (let i = 0; i < count; i++) {
+          const newNode = JSON.parse(JSON.stringify(subNode));
+          newNode.id = `${repeatNode.id}_${i}`;
+          if (!newNode.title) newNode.title = repeatNode.title;
+
+          if (newNode.path && Array.isArray(newNode.path)) {
+            newNode.path = [...newNode.path, i.toString()];
+          }
+
+          if (i < count - 1) {
+            newNode.next = `${repeatNode.id}_${i + 1}`;
+          } else {
+            newNode.next = repeatNode.next;
+          }
+
+          if (!this.flow.find((n: AnyNode) => n.id === newNode.id)) {
+            this.flow.push(newNode);
+          } else {
+            const idx = this.flow.findIndex((n: AnyNode) => n.id === newNode.id);
+            if (idx !== -1) this.flow[idx] = newNode;
+          }
+
+          if (newNode.type === "repeat-node") {
+            expanded.push(...this._expandNodes(newNode.id));
+          } else {
+            expanded.push(newNode);
+          }
+        }
+
+        if (count === 0) {
+          const nextNextId = evalFlowOperation(this.answers, repeatNode.next);
+          if (nextNextId) {
+            expanded.push(...this._expandNodes(nextNextId));
+          }
+        }
+        return expanded;
+      } else {
+        return [node];
+      }
+    },
+    // Automatically processes eval-nodes until an interactive node is reached
+    processAutoNodes() {
+      let currentNode = this.currentNode;
+      let iterations = 0;
+      while (currentNode && currentNode.type === "eval-node" && iterations < 100) {
+        iterations++;
+        const evalNode = currentNode as any;
+        
+        if (evalNode.defaults) {
+          this.setAnswer(evalNode.defaults);
+        }
+
+        const nextId = evalFlowOperation(this.answers, evalNode.next);
+        if (!nextId) break;
+
+        const nextNodes = this._expandNodes(nextId);
+        if (nextNodes.length === 0) break;
+
+        // Take all expanded nodes and append to path
+        this.path.push(...nextNodes);
+        // Note: we might be pushing multiple nodes if nextId was a RepeatNode
+        // We should skip to the end of the sequence? 
+        // No, currentStepIndex should move to the NEXT one in path.
+        this.currentStepIndex = this.path.length - nextNodes.length; 
+        // Wait, currentStepIndex should point to the FIRST of the nextNodes sequence.
+        // Actually, we want to continue the while loop from the NEW currentNode.
+        currentNode = this.currentNode;
+      }
     },
     async submitAnswer(answer: any) {
       const currentNode = this.currentNode;
@@ -145,77 +233,7 @@ export const useFlowStore = defineStore("flow", {
         return;
       }
 
-      // Helper to recursively expand nodes
-      const expandNodes = (startId: string): AnyNode[] => {
-        const node = this.flow.find((n: AnyNode) => n.id === startId);
-        if (!node) return [];
-
-        if (node.type === "repeat-node") {
-          // Expand RepeatNode
-          const repeatNode = node as any; // Cast to RepeatNode
-          const count = evalFlowOperation(this.answers, repeatNode.n) || 0;
-          const subNode = repeatNode.sub;
-
-          const expanded: AnyNode[] = [];
-          for (let i = 0; i < count; i++) {
-            const newNode = JSON.parse(JSON.stringify(subNode));
-            newNode.id = `${repeatNode.id}_${i}`;
-            if (!newNode.title) newNode.title = repeatNode.title;
-
-            // Append index to path if path exists
-            if (newNode.path && Array.isArray(newNode.path)) {
-              newNode.path = [...newNode.path, i.toString()];
-            }
-
-            // Chain next pointers
-            if (i < count - 1) {
-              newNode.next = `${repeatNode.id}_${i + 1}`;
-            } else {
-              // Last one points to repeatNode.next
-              newNode.next = repeatNode.next;
-            }
-
-            // Register in flow if not exists
-            if (!this.flow.find((n: AnyNode) => n.id === newNode.id)) {
-              this.flow.push(newNode);
-            } else {
-              // Update existing in case logic changed?
-              // Important if 'next' pointers need update due to 'count' change.
-              const idx = this.flow.findIndex(
-                (n: AnyNode) => n.id === newNode.id,
-              );
-              if (idx !== -1) this.flow[idx] = newNode;
-            }
-
-            // Recursively expand this new node?
-            // If subNode was a RepeatNode (nested), we would need to.
-            // But 'newNode' is the generic 'sub'.
-            // If 'sub' is RepeatNode, 'newNode' is RepeatNode.
-            // So yes, recursive expansion needed if type is repeat-node.
-            if (newNode.type === "repeat-node") {
-              expanded.push(...expandNodes(newNode.id));
-            } else {
-              expanded.push(newNode);
-            }
-          }
-
-          // If count is 0, we skip this repeat node and go to its next
-          if (count === 0) {
-            // Resolve next of repeat node
-            const nextNextId = evalFlowOperation(this.answers, repeatNode.next);
-            if (nextNextId) {
-              expanded.push(...expandNodes(nextNextId));
-            }
-          }
-
-          return expanded;
-        } else {
-          // Regular node
-          return [node];
-        }
-      };
-
-      const nextNodes = expandNodes(nextId);
+      const nextNodes = this._expandNodes(nextId);
 
       if (nextNodes.length === 0) {
         console.warn("Next resolution resulted in empty steps");
@@ -260,6 +278,9 @@ export const useFlowStore = defineStore("flow", {
         this.path.push(targetNextNode);
         this.currentStepIndex++;
       }
+
+      // 4. After appending new nodes, check if the NEW current node is an eval-node
+      this.processAutoNodes();
     },
 
     back() {

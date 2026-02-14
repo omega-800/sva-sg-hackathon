@@ -4,7 +4,7 @@ import { VStepper, VCard } from "vuetify/components";
 import { useFlowStore } from "../stores/flow";
 import StepTwo from "../components/StepTwo.vue";
 import { storeToRefs } from "pinia";
-import { evalFlowOperation, deepMerge } from "../utils/util";
+import { evalFlowOperation } from "../utils/util";
 import GoodEnding from "../components/GoodEnding.vue";
 import BadEnding from "../components/BadEnding.vue";
 import MaybeEnding from "../components/MaybeEnding.vue";
@@ -64,14 +64,6 @@ const handleJump = (groupIndex: number) => {
 const handleProcedeWithoutAnswer = () => {
   flowStore.submitAnswer(null);
 };
-
-const handleEval = (nodeItem)  => {
-  console.log(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {}, deepMerge(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {}))
-  console.log("\nasdfa\n")
-  const merged = deepMerge(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {})
-  flowStore.setAnswer(merged)
-  flowStore.submitAnswer(null);
-}
 </script>
 
 <template>
@@ -108,10 +100,7 @@ const handleEval = (nodeItem)  => {
                 :key="nodeItem.index"
                 >
                 <!-- Question Node -->
-                <template v-if="nodeItem.node.type === 'eval-node'" class="mb-6">
-                      <div>{{ handleEval(nodeItem) }}</div> 
-                </template>
-                <div v-else-if="nodeItem.node.type === 'input-node'" class="mb-6">
+                <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
                   <StepTwo
                   :node="(nodeItem.node as any)"
                   :disabled="nodeItem.index < flowStore.currentStepIndex"
@@ -166,8 +155,8 @@ const handleEval = (nodeItem)  => {
                   <!-- Description/Start Node -->
                   <div
                     v-else-if="
-                      nodeItem.node.type !== 'input-node' &&
-                      nodeItem.node.type !== 'end-node'
+                      nodeItem.node.type === 'simple-node' ||
+                      nodeItem.node.type === 'start-node'
                       "
                     class="mb-6"
                     >

@@ -32,17 +32,23 @@ export const setAtObjPath = (
 export const getAtObjPath = (elem: any, path: Array<string>) =>
   path.reduce((acc, k) => acc?.[k], elem);
 
-export const deepMerge = <T extends { [key: string]: any }>(a: T, b: T) => {
-  if (typeof b != "object") return a;
-  for (const key of Object.keys(b)) {
-    if (!!a?.[key] && typeof a[key] == "object" && !Array.isArray(a[key])) {
-      deepMerge(a[key], b[key]);
-      continue;
+export const deepMerge = (target: any, source: any) => {
+  if (!source || typeof source !== "object") return target;
+  if (!target || typeof target !== "object") return source;
+
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
+      if (!target[key] || typeof target[key] !== "object") {
+        target[key] = {};
+      }
+      deepMerge(target[key], source[key]);
+    } else {
+      if (!(key in target) || target[key] === undefined || target[key] === null) {
+        target[key] = JSON.parse(JSON.stringify(source[key]));
+      }
     }
-    if (key in a) continue;
-    a[key] = b[key];
   }
-  return a;
+  return target;
 };
 
 export const evalFlowOperation = (
