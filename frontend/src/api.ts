@@ -231,7 +231,7 @@ export const fetchFlow = (): Promise<Flowchart> =>
             lhs: ["vermoegen", "betrag"],
             rhs: 4000,
           },
-          lhs: "50cded42-3326-4919-9e0a-0000000000997",
+          lhs: "50cded42-3326-4919-9e0a-000000000997",
           rhs: "50cded42-3326-4919-9e0a-000000000040",
         },
       },
