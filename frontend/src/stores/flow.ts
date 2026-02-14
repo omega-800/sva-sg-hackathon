@@ -126,13 +126,18 @@ export const useFlowStore = defineStore("flow", {
     ) {
       setAtObjPath(this.answers, path, answer, op);
     },
+    setAnswer(answer:any){
+      if (!!answer) this.answers = answer;
+    },
     async submitAnswer(answer: any) {
       const currentNode = this.currentNode;
       if (!currentNode || currentNode.type === "end-node") return;
       if (!!answer) this.answers = answer;
 
+      console.log("1", currentNode.next, this.answers)
       // 2. Resolve NEXT node(s)
       const nextId = evalFlowOperation(this.answers, currentNode.next);
+      console.log("2")
 
       if (!nextId) {
         // If explicitly null/undefined, maybe end?

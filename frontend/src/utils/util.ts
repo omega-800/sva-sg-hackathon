@@ -33,8 +33,9 @@ export const getAtObjPath = (elem: any, path: Array<string>) =>
   path.reduce((acc, k) => acc?.[k], elem);
 
 export const deepMerge = <T extends { [key: string]: any }>(a: T, b: T) => {
+  if (typeof b != "object") return a;
   for (const key of Object.keys(b)) {
-    if (!!a?.[key] && typeof a[key] == "object") {
+    if (!!a?.[key] && typeof a[key] == "object" && !Array.isArray(a[key])) {
       deepMerge(a[key], b[key]);
       continue;
     }

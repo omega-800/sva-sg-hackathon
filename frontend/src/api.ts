@@ -241,16 +241,6 @@ export const fetchFlow = (): Promise<Flowchart> =>
         path: ["vermoegen", "betrag"],
         question: "Wie hoch ist Ihr Vermögen?",
         next: "50cded42-3326-4919-9e0a-000000000040",
-        // next: {
-        //   op: "if",
-        //   val: {
-        //     op: "gt",
-        //     lhs: ["vermoegen", "betrag"],
-        //     rhs: 4000,
-        //   },
-        //   lhs: "50cded42-3326-4919-9e0a-000000000997",
-        //   rhs: "50cded42-3326-4919-9e0a-000000000040",
-        // },
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000040",
@@ -284,24 +274,11 @@ export const fetchFlow = (): Promise<Flowchart> =>
         question: "Wie teuer ist Ihr Motorfahrzeug?",
         path: ["vermoegen", "fahrzeug", "betrag"],
         next: "50cded42-3326-4919-9e0a-000000000996",
-        // next: {
-        //   op: "if",
-        //   val: {
-        //     op: "gt",
-        //     lhs: {
-        //       op: "add",
-        //       lhs: ["vermoegen", "betrag"],
-        //       rhs: ["vermoegen", "fahrzeug", "betrag"],
-        //     },
-        //     rhs: 4000,
-        //   },
-        //   lhs: "50cded42-3326-4919-9e0a-000000000997",
-        //   rhs: "50cded42-3326-4919-9e0a-000000000998",
-        // },
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000996",
         type: "eval-node",
+        title: "Vermögen",
         defaults: {
           personalien: {
             ausweis: "CH",

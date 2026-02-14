@@ -66,7 +66,11 @@ const handleProcedeWithoutAnswer = () => {
 };
 
 const handleEval = (nodeItem)  => {
-  flowStore.submitAnswer(deepMerge(toRaw(answers), nodeItem.node?.defaults ?? {}));
+  console.log(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {}, deepMerge(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {}))
+  console.log("\nasdfa\n")
+  const merged = deepMerge(toRaw(answers), toRaw(nodeItem.node?.defaults) ?? {})
+  flowStore.setAnswer(merged)
+  flowStore.submitAnswer(null);
 }
 </script>
 
@@ -104,7 +108,6 @@ const handleEval = (nodeItem)  => {
                 :key="nodeItem.index"
                 >
                 <!-- Question Node -->
-
                 <template v-if="nodeItem.node.type === 'eval-node'" class="mb-6">
                       <div>{{ handleEval(nodeItem) }}</div> 
                 </template>
