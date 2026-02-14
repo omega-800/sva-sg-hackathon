@@ -6,14 +6,27 @@ export const isPrim = (elem: any): elem is Prim =>
 export const isObjPath = (elem: any): elem is Array<string> =>
   Array.isArray(elem) && elem.every((i) => typeof i == "string");
 
-export const setAtObjPath = (elem: any, path: Array<string>, val: any) => {
+export const setAtObjPath = (
+  elem: any,
+  path: Array<string>,
+  val: any,
+  op: "set" | "add" | "push",
+) => {
   let cur = elem;
-  const lastIndex = path.length - 1;
-  for (let i = 0; i < lastIndex; i++) {
-    const key = path[i];
-    cur = cur[key] ??= {};
+  for (let i = 0; i < path.length - 1; i++) {
+    let k = path[i];
+    cur[k] ??= {};
+    cur = cur[k];
   }
-  cur[path[lastIndex]] = val;
+  if (op == "set") {
+    cur[path[path.length - 1]] = val;
+  } else if (op == "add") {
+    cur[path[path.length - 1]] ??= 0;
+    cur[path[path.length - 1]] += val;
+  } else if (op == "push") {
+    cur[path[path.length - 1]] ??= [];
+    cur[path[path.length - 1]].push(val);
+  }
 };
 
 export const getAtObjPath = (elem: any, path: Array<string>) =>
@@ -25,7 +38,7 @@ export const evalFlowOperation = (
 ): any => {
   if (isPrim(o)) return o;
   if (isObjPath(o)) return getAtObjPath(ctx, o);
-  
+
   // We need to handle the union type Operation safely
   // define evalOp with the evaluated children
   const op = o.op;

@@ -65,8 +65,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
             op: "gt",
             rhs: 0,
           },
-          lhs: "50cded42-3326-4919-9e0a-000000000012",
-          rhs: "50cded42-3326-4919-9e0a-000000000017",
+          lhs: "50cded42-3326-4919-9e0a-000000000017",
+          rhs: "50cded42-3326-4919-9e0a-000000000012",
         },
       },
       {
@@ -128,7 +128,7 @@ export const fetchFlow = (): Promise<Flowchart> =>
           input: "radio",
           question: "Für wen sind Sie finanziell verantwortlich?",
           path: ["finanzen", "extraPersonen"],
-          op: "add",
+          op: "push",
           choices: [
             {
               title: "Ehepartner/-in",
@@ -203,8 +203,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
         next: {
           op: "if",
           val: ["vermoegen", "vorhanden"],
-          lhs: "50cded42-3326-4919-9e0a-000000037",
-          rhs: "50cded42-3326-4919-9e0a-000000040",
+          lhs: "50cded42-3326-4919-9e0a-000000000037",
+          rhs: "50cded42-3326-4919-9e0a-000000000040",
         },
         choices: [
           {
@@ -277,8 +277,8 @@ export const fetchFlow = (): Promise<Flowchart> =>
             },
             rhs: 4000,
           },
-          lhs: "50cded42-3326-4919-9e0a-0000009997",
-          rhs: "50cded42-3326-4919-9e0a-0000009998",
+          lhs: "50cded42-3326-4919-9e0a-0000000009997",
+          rhs: "50cded42-3326-4919-9e0a-0000000009998",
         },
       },
       {
