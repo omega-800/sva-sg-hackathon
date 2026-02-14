@@ -4,7 +4,7 @@ import { VStepper, VCard } from "vuetify/components";
 import { useFlowStore } from "../stores/flow";
 import StepTwo from "../components/StepTwo.vue";
 import { storeToRefs } from "pinia";
-import {evalFlowOperation} from "../utils/util";
+import { evalFlowOperation } from "../utils/util";
 
 const flowStore = useFlowStore();
 const { answers } = storeToRefs(flowStore);
@@ -121,7 +121,10 @@ const handleProcedeWithoutAnswer = () => {
                       class="mb-6"
                     >
                       <StepTwo
-                        v-for="i in evalFlowOperation(toRaw(answers),nodeItem.node.n)"
+                        v-for="i in evalFlowOperation(
+                          toRaw(answers),
+                          nodeItem.node.n,
+                        )"
                         :node="nodeItem.node.sub"
                         :disabled="nodeItem.index < flowStore.currentStepIndex"
                       />
@@ -195,13 +198,22 @@ const handleProcedeWithoutAnswer = () => {
 </template>
 
 <style>
-.v-stepper-item__avatar {
-  background-color: var(--st-gallen-red);
+.v-card-text {
+  background-color: var(--st-gallen-bg);
 }
+.v-stepper {
+  background-color: var(--st-gallen-bg);
+}
+
+.v-stepper-item__avatar {
+  background-color: var(--st-gallen-red) !important;
+}
+
 .v-btn {
   background-color: var(--st-gallen-red2);
   color: white;
 }
+
 .v-btn--variant-text {
   background-color: transparent;
   color: var(--st-gallen-red2);
