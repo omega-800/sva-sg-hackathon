@@ -121,11 +121,12 @@ export const useFlowStore = defineStore("flow", {
     },
     submitAnswerAt(
       path: Array<string>,
-      op: "set" | "add" | "push",
       answer: any,
+      op: "set" | "add" | "push",
     ) {
-      console.log(path, answer);
+      console.log("wtf", path, answer, op);
       setAtObjPath(this.answers, path, answer, op);
+      console.log(this.answers)
     },
     async submitAnswer(answer: any) {
       const currentNode = this.currentNode;

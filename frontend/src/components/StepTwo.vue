@@ -12,7 +12,8 @@ const props = defineProps<{
 
 const flowStore = useFlowStore();
 const { answers } = storeToRefs(flowStore);
-const submitV = (v) => flowStore.submitAnswerAt(props.node.path, v, props.node?.op??"add");
+const submitV = (v) =>
+  flowStore.submitAnswerAt(props.node.path, v, props.node?.op ?? "add");
 
 // const answer = computed(() => getAtObjPath(toRaw(answers), props.node.path) ?? null);
 const answer = ref(
