@@ -6,7 +6,6 @@ import StepTwo from '../components/StepTwo.vue'
 
 const flowStore = useFlowStore()
 
-const currentAnswers = ref<Record<string, any>>({})
 const step = ref(1)
 
 onMounted(async () => {
@@ -37,18 +36,7 @@ watch(currentGroupIndex, (newIndex) => {
 const handleNext = () => {
   const currentNode = flowStore.currentNode
   if (!currentNode) return
-  
-  // We don't need to manually check answer here if v-model in StepTwo updates the store/local state correctly.
-  // But flowStore.submitAnswer expects an answer value to determine next step?
-  // Actually, submitAnswer uses `this.answers[currentNode.id]`.
-  // So we just need to trigger it.
-  // But wait, submitAnswer signature takes `answer: any`.
-  // And it compares `answer` with `existingAnswer` to detect change.
-  // We should pass the current answer for that node.
-  // We might want to allow empty answers?
-  // Logic says "if answer !== undefined ...".
-  // Let's keep it safe.
-  flowStore.submitAnswer(currentAnswers.value)
+  flowStore.submitAnswer(null)
 }
 
 const handleBack = () => {
@@ -66,21 +54,6 @@ const handleJump = (groupIndex: number) => {
 const handleProcedeWithoutAnswer = () => {
     flowStore.submitAnswer(null)
 }
-
-// Watch global answers to sync local state
-watch(() => flowStore.answers, (newAnswers) => {
-    // Deep merge or replace?
-    // flowStore.answers is the source of truth.
-    // currentAnswers is a ref to a Record.
-    // If we replace it, we lose reactivity if passed as prop?
-    // But StepTwo takes modelValue.
-    // Let's just update keys.
-    // Actually, object assign is fine.
-    // But StepTwo uses deep paths.
-    // If we replace root object, it should be fine.
-    currentAnswers.value = JSON.parse(JSON.stringify(newAnswers))
-}, { deep: true, immediate: true })
-
 </script>
 
 <template>
@@ -120,8 +93,6 @@ watch(() => flowStore.answers, (newAnswers) => {
                          <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
                              <StepTwo 
                                 :node="nodeItem.node"
-                                :modelValue="currentAnswers"
-                                @update:modelValue="val => currentAnswers = val"
                                 :disabled="nodeItem.index < flowStore.currentStepIndex"
                              />
                              
