@@ -301,8 +301,37 @@ export const fetchFlow = (): Promise<Flowchart> =>
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000996",
-        type: "simple-node",
-        title: "Kalkulieren",
+        type: "eval-node",
+        defaults: {
+          personalien: {
+            ausweis: "CH",
+            alter: 20,
+          },
+          finanzen: {
+            personen: 0,
+            extraPersonen: [],
+          },
+          wohnen: {
+            wohnort: "asdf",
+            wohnform: "O",
+          },
+          arbeit: {
+            taetig: false,
+            lohn: 0,
+            pensum: 0,
+            plz: 0,
+            verpflegung: 0,
+            fahrspesen: 0,
+          },
+          vermoegen: {
+            vorhanden: false,
+            betrag: 0,
+            fahrzeug: {
+              vorhanden: false,
+              betrag: 0,
+            },
+          },
+        },
         next: {
           op: "all",
           val: [
@@ -373,20 +402,16 @@ export const fetchFlow = (): Promise<Flowchart> =>
         id: "50cded42-3326-4919-9e0a-000000000997",
         type: "end-node",
         title: "Sie haben leider keinen Anspruch auf Sozialhilfe",
-        outcome: "bad"
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000998",
         type: "end-node",
         title: "Sie haben möglicherweise Anspruch auf Sozialhilfe",
-        outcome: "maybe"
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000999",
         type: "end-node",
         title: "Sie haben wahrscheinlich Anspruch auf Sozialhilfe",
-        outcome: "good"
       },
     ]),
   );
-

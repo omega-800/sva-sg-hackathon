@@ -4,7 +4,7 @@ import { VStepper, VCard } from "vuetify/components";
 import { useFlowStore } from "../stores/flow";
 import StepTwo from "../components/StepTwo.vue";
 import { storeToRefs } from "pinia";
-import { evalFlowOperation } from "../utils/util";
+import { evalFlowOperation, deepMerge } from "../utils/util";
 import GoodEnding from "../components/GoodEnding.vue";
 import BadEnding from "../components/BadEnding.vue";
 import MaybeEnding from "../components/MaybeEnding.vue";
@@ -64,6 +64,10 @@ const handleJump = (groupIndex: number) => {
 const handleProcedeWithoutAnswer = () => {
   flowStore.submitAnswer(null);
 };
+
+const handleEval = (nodeItem)  => {
+  flowStore.submitAnswer(deepMerge(toRaw(answers), nodeItem.node?.defaults ?? {}));
+}
 </script>
 
 <template>
@@ -100,7 +104,11 @@ const handleProcedeWithoutAnswer = () => {
                 :key="nodeItem.index"
                 >
                 <!-- Question Node -->
-                <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
+
+                <template v-if="nodeItem.node.type === 'eval-node'" class="mb-6">
+                      <div>{{ handleEval(nodeItem) }}</div> 
+                </template>
+                <div v-else-if="nodeItem.node.type === 'input-node'" class="mb-6">
                   <StepTwo
                   :node="(nodeItem.node as any)"
                   :disabled="nodeItem.index < flowStore.currentStepIndex"

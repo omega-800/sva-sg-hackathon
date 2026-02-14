@@ -1,5 +1,6 @@
 export type NodeType =
   | "simple-node"
+  | "eval-node"
   | "start-node"
   | "end-node"
   | "repeat-node"
@@ -32,6 +33,8 @@ export type Node = {
   type: NodeType;
   next: string | Operation;
 };
+
+export type EvalNode = Node & { defaults?: any; type: "eval-node" };
 
 export type RepeatNode = Node & { sub: Node; n: Operation | number | Array<string>; type: "repeat-node" };
 
@@ -66,20 +69,8 @@ export type InputNode = QuestionNode & { type: "input-node" } & (
   );
 
 export type Flowchart = Array<
-  RepeatNode | SimpleNode | StartNode | EndNode | InputNode
+  EvalNode | RepeatNode | SimpleNode | StartNode | EndNode | InputNode
 >;
-
-// export type Rules = {
-//
-// }
-//
-// export type Calculation = {
-//   grundbedarf: null,
-//   mietzins: null,
-//   kgv: null,
-//   vermögen: null,
-//   einkommen: null
-// }
 
 export type UserData = {
   personalien: {
