@@ -131,7 +131,7 @@ export const useFlowStore = defineStore("flow", {
     ) {
       setAtObjPath(this.answers, path, answer, op);
     },
-    setAnswer(answer: any) {
+    mergeAnswers(answer: any) {
       if (!!answer) {
         // We use deepMerge to preserve existing structure and ensure reactivity is handled correctly
         this.answers = deepMerge(JSON.parse(JSON.stringify(this.answers)), answer);
@@ -190,14 +190,23 @@ export const useFlowStore = defineStore("flow", {
     },
     // Automatically processes eval-nodes until an interactive node is reached
     processAutoNodes() {
-      let currentNode = this.currentNode;
       let iterations = 0;
-      while (currentNode && currentNode.type === "eval-node" && iterations < 100) {
+      // Start processing from the node immediately following the current interactive one
+      // The interactive node is at currentStepIndex.
+      // We want to see if the NEXT pointers of that node lead to eval-nodes.
+      
+      let checkIndex = this.currentStepIndex;
+      while (iterations < 100) {
         iterations++;
+        const currentNode = this.path[checkIndex];
+        if (!currentNode) break;
+
+        // If current node is NOT an eval-node, we stop processing automatic transitions
+        if (currentNode.type !== "eval-node") break;
+
         const evalNode = currentNode as any;
-        
         if (evalNode.defaults) {
-          this.setAnswer(evalNode.defaults);
+          this.mergeAnswers(evalNode.defaults);
         }
 
         const nextId = evalFlowOperation(this.answers, evalNode.next);
@@ -206,21 +215,33 @@ export const useFlowStore = defineStore("flow", {
         const nextNodes = this._expandNodes(nextId);
         if (nextNodes.length === 0) break;
 
-        // Take all expanded nodes and append to path
-        this.path.push(...nextNodes);
-        // Note: we might be pushing multiple nodes if nextId was a RepeatNode
-        // We should skip to the end of the sequence? 
-        // No, currentStepIndex should move to the NEXT one in path.
-        this.currentStepIndex = this.path.length - nextNodes.length; 
-        // Wait, currentStepIndex should point to the FIRST of the nextNodes sequence.
-        // Actually, we want to continue the while loop from the NEW currentNode.
-        currentNode = this.currentNode;
+        // Take the first node from expanded list
+        const targetNextNode = nextNodes[0];
+
+        // Check if next node in path is already what we expect
+        if (checkIndex < this.path.length - 1) {
+          const actualNextNode = this.path[checkIndex + 1];
+          if (actualNextNode.id !== targetNextNode.id) {
+            // Divergence - truncate and replace
+            this.path = this.path.slice(0, checkIndex + 1);
+            this.path.push(...nextNodes);
+          } else {
+            // Already correct, just move forward to check the next if it's an eval node too
+          }
+        } else {
+          // No next node, just append
+          this.path.push(...nextNodes);
+        }
+        
+        // Move to the node we just verified/added
+        checkIndex++;
       }
+      this.currentStepIndex = checkIndex;
     },
     async submitAnswer(answer: any) {
       const currentNode = this.currentNode;
       if (!currentNode || currentNode.type === "end-node") return;
-      if (!!answer) this.answers = answer;
+      if (!!answer) this.mergeAnswers(answer);
 
       console.log("1", currentNode.next, this.answers)
       // 2. Resolve NEXT node(s)

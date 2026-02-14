@@ -51,6 +51,22 @@ export const deepMerge = (target: any, source: any) => {
   return target;
 };
 
+export const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
+  }
+  if (a && b && typeof a === "object" && typeof b === "object") {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    return (
+      keysA.length === keysB.length &&
+      keysA.every((k) => deepEqual(a[k], b[k]))
+    );
+  }
+  return false;
+};
+
 export const evalFlowOperation = (
   ctx: UserData,
   o: Operation | Prim | Array<string>,
@@ -58,32 +74,30 @@ export const evalFlowOperation = (
   if (isPrim(o)) return o;
   if (isObjPath(o)) return getAtObjPath(ctx, o);
 
-  // We need to handle the union type Operation safely
-  // define evalOp with the evaluated children
   const op = o.op;
   const lhs = evalFlowOperation(ctx, o.lhs);
   const rhs = evalFlowOperation(ctx, o.rhs);
 
   if (op == "all" || op == "some") {
-    const val = "val" in o ? o.val.map((v) => evalFlowOperation(ctx, v)) : [];
-    const res = op == "all" ? val.every((v) => v) : val.some((v) => v);
+    const vals = "val" in o ? o.val.map((v) => evalFlowOperation(ctx, v)) : [];
+    const res = op == "all" ? vals.every((v) => !!v) : vals.some((v) => !!v);
     return res ? lhs : rhs;
   } else if (op == "if") {
     const val = "val" in o ? evalFlowOperation(ctx, o.val) : undefined;
     return val ? lhs : rhs;
   } else if (op == "sub") {
-    return lhs - rhs;
+    return (lhs || 0) - (rhs || 0);
   } else if (op == "add") {
-    return lhs + rhs;
+    return (lhs || 0) + (rhs || 0);
   } else if (op == "lt") {
-    return lhs < rhs;
+    return (lhs || 0) < (rhs || 0);
   } else if (op == "gt") {
-    return lhs > rhs;
+    return (lhs || 0) > (rhs || 0);
   } else if (op == "eq") {
-    return lhs == rhs;
+    return deepEqual(lhs, rhs);
   } else if (op == "div") {
-    return lhs / rhs;
+    return (lhs || 0) / (rhs || 1);
   } else if (op == "mul") {
-    return lhs * rhs;
+    return (lhs || 0) * (rhs || 0);
   }
 };

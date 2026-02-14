@@ -199,7 +199,7 @@ export const fetchFlow = (): Promise<Flowchart> =>
         question: "Fahrspesen",
         path: ["arbeit", "fahrspesen"],
         input: "number",
-        next: "50cded42-3326-4919-9e0a-0000000000102",
+        next: "50cded42-3326-4919-9e0a-000000000102",
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000102",
@@ -379,16 +379,19 @@ export const fetchFlow = (): Promise<Flowchart> =>
         id: "50cded42-3326-4919-9e0a-000000000997",
         type: "end-node",
         title: "Sie haben leider keinen Anspruch auf Sozialhilfe",
+        outcome: "bad",
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000998",
         type: "end-node",
         title: "Sie haben möglicherweise Anspruch auf Sozialhilfe",
+        outcome: "maybe",
       },
       {
         id: "50cded42-3326-4919-9e0a-000000000999",
         type: "end-node",
         title: "Sie haben wahrscheinlich Anspruch auf Sozialhilfe",
+        outcome: "good",
       },
     ]),
   );

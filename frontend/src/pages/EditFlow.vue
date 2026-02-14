@@ -96,7 +96,7 @@
         <div class="logic-header">
           <h3>Connections</h3>
           <button class="toggle-logic-btn" @click="toggleLogicType">
-            {{ isIfOp((selected as any).next) ? 'Switch to Simple' : 'Switch to IF' }}
+            {{ isLogicOp((selected as any).next) ? `Type: ${(selected as any).next.op.toUpperCase()}` : 'Switch to Logic' }}
           </button>
         </div>
 
@@ -111,10 +111,23 @@
           </select>
         </div>
 
-        <!-- IF Connection -->
-        <div v-else-if="isIfOp((selected as any).next)" class="conn-box if-box">
-          <label>Condition</label>
-          <input v-model="(selected as any).next.val" placeholder="e.g. status === 'ok'" />
+        <!-- Logic (IF / ALL / SOME) Connection -->
+        <div v-else-if="isLogicOp((selected as any).next)" class="conn-box if-box">
+          <div v-if="(selected as any).next.op === 'if'">
+            <label>Condition</label>
+            <input v-model="(selected as any).next.val" placeholder="e.g. status === 'ok'" />
+          </div>
+          
+          <div v-else>
+            <div class="d-flex align-center justify-space-between mb-2">
+              <label class="ma-0">Conditions ({{ (selected as any).next.op.toUpperCase() }})</label>
+              <v-btn density="compact" icon="mdi-plus" color="primary" variant="tonal" @click="(selected as any).next.val.push('')"></v-btn>
+            </div>
+            <div v-for="(cond, idx) in (selected as any).next.val" :key="idx" class="d-flex ga-2 mb-2">
+              <input v-model="(selected as any).next.val[idx]" placeholder="e.g. path.to.val" />
+              <v-btn density="compact" icon="mdi-close" color="error" variant="text" @click="(selected as any).next.val.splice(idx, 1)"></v-btn>
+            </div>
+          </div>
 
           <label class="green-label">True Path (LHS)</label>
           <select v-model="(selected as any).next.lhs">
@@ -166,8 +179,8 @@ onMounted(async () => {
 });
 
 // 3. Logic: Extracting Targets
-function isIfOp(next: any): next is Extract<Operation, { op: "if" }> {
-  return next && typeof next === 'object' && next.op === 'if';
+function isLogicOp(next: any): next is Extract<Operation, { op: "if" | "all" | "some" }> {
+  return next && typeof next === 'object' && ['if', 'all', 'some'].includes(next.op);
 }
 
 function getConnections(node: AnyNode) {
@@ -179,7 +192,7 @@ function getConnections(node: AnyNode) {
 
   if (typeof next === 'string') {
     conns.push({ to: next, type: 'default' });
-  } else if (isIfOp(next)) {
+  } else if (isLogicOp(next)) {
     if (typeof next.lhs === 'string') conns.push({ to: next.lhs, type: 'true' });
     if (typeof next.rhs === 'string') conns.push({ to: next.rhs, type: 'false' });
   }
@@ -268,10 +281,20 @@ function addNode(type: NodeType) {
 function toggleLogicType() {
   if (!selected.value) return;
   const selNode = selected.value as any;
-  if (typeof selNode.next === 'string') {
-    selNode.next = { op: 'if', val: 'true', lhs: selNode.next, rhs: '' };
+  const next = selNode.next;
+  
+  if (typeof next === 'string') {
+    // Simple -> IF
+    selNode.next = { op: 'if', val: '', lhs: next, rhs: '' };
+  } else if (next.op === 'if') {
+    // IF -> ALL
+    selNode.next = { op: 'all', val: [], lhs: next.lhs, rhs: next.rhs };
+  } else if (next.op === 'all') {
+    // ALL -> SOME
+    selNode.next = { op: 'some', val: [], lhs: next.lhs, rhs: next.rhs };
   } else {
-    selNode.next = (selNode.next as any).lhs || '';
+    // SOME -> Simple
+    selNode.next = next.lhs || '';
   }
 }
 

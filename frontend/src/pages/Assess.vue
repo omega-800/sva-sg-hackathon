@@ -8,7 +8,9 @@ import { evalFlowOperation } from "../utils/util";
 import GoodEnding from "../components/GoodEnding.vue";
 import BadEnding from "../components/BadEnding.vue";
 import MaybeEnding from "../components/MaybeEnding.vue";
+import { useI18nStore } from "../stores/i18n";
 
+const i18n = useI18nStore();
 const flowStore = useFlowStore();
 const { answers } = storeToRefs(flowStore);
 
@@ -20,7 +22,13 @@ onMounted(async () => {
 
 // Grouped path from store
 const groupedPath = computed(() => flowStore.groupedPath);
-const titles = computed(() => groupedPath.value.map((g) => g.title));
+const titles = computed(() => {
+  const baseTitles = groupedPath.value.map((g) => g.title);
+  if (baseTitles.length > 0 && flowStore.isEndNode) {
+    baseTitles[baseTitles.length - 1] = i18n.t('assess.result');
+  }
+  return baseTitles;
+});
 
 // Find which group contains the current step index
 const currentGroupIndex = computed(() => {
@@ -67,10 +75,10 @@ const handleProcedeWithoutAnswer = () => {
 </script>
 
 <template>
-  <v-container>
-
-    <v-app>
-      <v-stepper v-model="step" alt-labels v-if="titles.length > 0">
+  <v-container class="py-10">
+    <v-row justify="center">
+      <v-col cols="12" sm="12" md="11" lg="10">
+        <v-stepper v-model="step" alt-labels v-if="titles.length > 0" flat rounded="xl" class="border">
         <template v-slot:default="{ prev, next }">
           <v-stepper-header>
             <template v-for="(title, index) in titles" :key="index">
@@ -94,11 +102,12 @@ const handleProcedeWithoutAnswer = () => {
             >
             <v-card flat>
               <v-card-text>
-                <!-- Loop through nodes in this group -->
-                <template
-                v-for="(nodeItem, nodeIndex) in group.nodes"
-                :key="nodeItem.index"
-                >
+                <!-- Loop through nodes in this group, but only if we are not showing the final result here -->
+                <template v-if="!flowStore.isEndNode || index < groupedPath.length - 1">
+                  <template
+                  v-for="(nodeItem, nodeIndex) in group.nodes"
+                  :key="nodeItem.index"
+                  >
                 <!-- Question Node -->
                 <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
                   <StepTwo
@@ -114,10 +123,10 @@ const handleProcedeWithoutAnswer = () => {
                   v-if="flowStore.currentStepIndex > 0"
                   variant="text"
                   @click="handleBack"
-                  >Zurück</v-btn
+                  >{{ i18n.t('assess.back') }}</v-btn
                   >
                   <v-spacer v-else></v-spacer>
-                  <v-btn color="primary" @click="handleNext">Weiter</v-btn>
+                  <v-btn color="primary" @click="handleNext">{{ i18n.t('assess.next') }}</v-btn>
                 </div>
               </div>
               <template v-else-if="nodeItem.node.type === 'repeat-node'">
@@ -142,11 +151,11 @@ const handleProcedeWithoutAnswer = () => {
                       v-if="flowStore.currentStepIndex > 0"
                       variant="text"
                       @click="handleBack"
-                      >Zurück</v-btn
+                      >{{ i18n.t('assess.back') }}</v-btn
                       >
                       <v-spacer v-else></v-spacer>
                       <v-btn color="primary" @click="handleNext"
-                      >Weiter</v-btn
+                      >{{ i18n.t('assess.next') }}</v-btn
                       >
                       </div>
                     </div>
@@ -169,15 +178,16 @@ const handleProcedeWithoutAnswer = () => {
                     v-if="flowStore.currentStepIndex > 0"
                     variant="text"
                     @click="handleBack"
-                    >Zurück</v-btn
+                    >{{ i18n.t('assess.back') }}</v-btn
                     >
                     <v-spacer v-else></v-spacer>
                     <v-btn color="primary" @click="handleProcedeWithoutAnswer"
-                    >Starten</v-btn
+                    >{{ i18n.t('assess.start') }}</v-btn
                     >
                   </div>
                 </div>
               </template>
+            </template>
               
               <!-- End Node Case -->
               <div
@@ -198,7 +208,7 @@ const handleProcedeWithoutAnswer = () => {
                 </div>
 
                 <div class="justify-start mt-4 d-flex">
-                  <v-btn variant="text" @click="handleBack">Zurück</v-btn>
+                  <v-btn variant="text" @click="handleBack">{{ i18n.t('assess.back') }}</v-btn>
                 </div>
               </div>
               </v-card-text>
@@ -211,8 +221,9 @@ const handleProcedeWithoutAnswer = () => {
     <div v-else class="justify-center d-flex align-center h-100">
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
-  </v-app>
-</v-container>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <style>
