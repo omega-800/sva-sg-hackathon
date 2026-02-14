@@ -21,7 +21,7 @@
           @click="selectNode(node)"
         >
           <span class="badge">{{ node.type.replace('-node', '') }}</span>
-          <div class="title">{{ node.title || node.question || 'No Title' }}</div>
+          <div class="title">{{ (node as any).title || (node as any).question || 'No Title' }}</div>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
           <text x="12" y="22" class="node-label">{{ node.type.toUpperCase() }}</text>
           <foreignObject x="12" y="30" width="176" height="42">
             <div class="node-content-html" xmlns="http://www.w3.org/1999/xhtml">
-              {{ node.title || node.question || 'Unnamed Node' }}
+              {{ (node as any).title || (node as any).question || 'Unnamed Node' }}
             </div>
           </foreignObject>
         </g>
@@ -96,34 +96,34 @@
         <div class="logic-header">
           <h3>Connections</h3>
           <button class="toggle-logic-btn" @click="toggleLogicType">
-            {{ isIfOp(selected.next) ? 'Switch to Simple' : 'Switch to IF' }}
+            {{ isIfOp((selected as any).next) ? 'Switch to Simple' : 'Switch to IF' }}
           </button>
         </div>
 
         <!-- Simple Connection -->
-        <div v-if="typeof selected.next === 'string'" class="conn-box">
+        <div v-if="typeof (selected as any).next === 'string'" class="conn-box">
           <label>Target Node</label>
-          <select v-model="selected.next">
+          <select v-model="(selected as any).next">
             <option value="">-- No Connection --</option>
             <option v-for="n in flow" :key="n.id" :value="n.id" :disabled="n.id === selected.id">
-              {{ n.title || n.id.slice(0,8) }} ({{ n.type }})
+              {{ (n as any).title || n.id.slice(0,8) }} ({{ n.type }})
             </option>
           </select>
         </div>
 
         <!-- IF Connection -->
-        <div v-else-if="isIfOp(selected.next)" class="conn-box if-box">
+        <div v-else-if="isIfOp((selected as any).next)" class="conn-box if-box">
           <label>Condition</label>
-          <input v-model="selected.next.val" placeholder="e.g. status === 'ok'" />
+          <input v-model="(selected as any).next.val" placeholder="e.g. status === 'ok'" />
 
           <label class="green-label">True Path (LHS)</label>
-          <select v-model="selected.next.lhs">
-            <option v-for="n in flow" :key="n.id" :value="n.id">{{ n.title || n.id.slice(0,8) }}</option>
+          <select v-model="(selected as any).next.lhs">
+            <option v-for="n in flow" :key="n.id" :value="n.id">{{ (n as any).title || n.id.slice(0,8) }}</option>
           </select>
 
           <label class="red-label">False Path (RHS)</label>
-          <select v-model="selected.next.rhs">
-            <option v-for="n in flow" :key="n.id" :value="n.id">{{ n.title || n.id.slice(0,8) }}</option>
+          <select v-model="(selected as any).next.rhs">
+            <option v-for="n in flow" :key="n.id" :value="n.id">{{ (n as any).title || n.id.slice(0,8) }}</option>
           </select>
         </div>
       </div>
@@ -135,12 +135,15 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from "vue"
-import { Node, NodeType, Operation } from "../types";
+import { NodeType, Operation, Flowchart, Node as FlowNode } from "../types";
 import { fetchFlow } from "../api";
 
-const flow = ref<Node[]>([])
+type AnyNode = Flowchart[number];
+
+const flow = ref<AnyNode[]>([])
 const positions = reactive<Record<string, { x: number; y: number }>>({})
-const selected = ref<Node | null>(null)
+const virtualPoints = reactive<Record<string, { x: number; y: number }>>({})
+const selected = ref<AnyNode | null>(null)
 
 // 1. Dynamic Canvas Size
 const canvasSize = computed(() => {
@@ -167,66 +170,88 @@ function isIfOp(next: any): next is Extract<Operation, { op: "if" }> {
   return next && typeof next === 'object' && next.op === 'if';
 }
 
-function getConnections(node: Node) {
+function getConnections(node: AnyNode) {
   const conns: { to: string; type: 'default' | 'true' | 'false' }[] = [];
-  if (!node || !node.next) return conns;
+  if (!node || node.type === 'end-node') return conns;
+  
+  const next = (node as FlowNode).next;
+  if (!next) return conns;
 
-  if (typeof node.next === 'string') {
-    conns.push({ to: node.next, type: 'default' });
-  } else if (isIfOp(node.next)) {
-    if (typeof node.next.lhs === 'string') conns.push({ to: node.next.lhs, type: 'true' });
-    if (typeof node.next.rhs === 'string') conns.push({ to: node.next.rhs, type: 'false' });
+  if (typeof next === 'string') {
+    conns.push({ to: next, type: 'default' });
+  } else if (isIfOp(next)) {
+    if (typeof next.lhs === 'string') conns.push({ to: next.lhs, type: 'true' });
+    if (typeof next.rhs === 'string') conns.push({ to: next.rhs, type: 'false' });
   }
   return conns.filter(c => flow.value.some(n => n.id === c.to));
 }
 
-// 4. Beautiful Layout Engine (Vertical)
+// 4. Beautiful Layout Engine (Vertical + Sugiyama)
 function layoutFlowVertical() {
   if (flow.value.length === 0) return;
 
+  // Clear old virtual points
+  for (const k in virtualPoints) delete virtualPoints[k];
+
+  // 1. Ranking (Longest Path)
   const ranks: Record<string, number> = {};
-  const visited = new Set<string>();
-  const rows: string[][] = [];
-
-  const startNodes = flow.value.filter(n => n.type === 'start-node');
-  const queue: { id: string; rank: number }[] = startNodes.map(n => ({ id: n.id, rank: 0 }));
-  
-  // Also include nodes with no incoming connections as roots
-  const allTargets = new Set(flow.value.flatMap(n => getConnections(n).map(c => c.to)));
-  flow.value.forEach(n => {
-    if (!allTargets.has(n.id) && n.type !== 'start-node') {
-      queue.push({ id: n.id, rank: 0 });
-    }
-  });
-
-  while (queue.length > 0) {
-    const { id, rank } = queue.shift()!;
-    if (visited.has(id)) continue;
-    visited.add(id);
-
-    if (!rows[rank]) rows[rank] = [];
-    rows[rank].push(id);
-
-    const node = flow.value.find(n => n.id === id);
-    if (node) {
+  flow.value.forEach(n => ranks[n.id] = 0);
+  for (let i = 0; i < flow.value.length; i++) {
+    let changed = false;
+    flow.value.forEach(node => {
       getConnections(node).forEach(conn => {
-        queue.push({ id: conn.to, rank: rank + 1 });
+        if (ranks[conn.to] <= ranks[node.id]) {
+          ranks[conn.to] = ranks[node.id] + 1;
+          changed = true;
+        }
       });
-    }
+    });
+    if (!changed) break;
   }
 
-  // Visual Positioning
-  const V_GAP = 180;
-  const H_GAP = 240;
-  const CENTER_X = 500;
+  // 2. Virtual Node Phase
+  const maxRank = Math.max(...Object.values(ranks), 0);
+  const rows: { id: string; isVirtual: boolean }[][] = [];
+  for (let r = 0; r <= maxRank; r++) rows[r] = [];
 
-  rows.forEach((nodeIds, r) => {
-    const rowWidth = (nodeIds.length - 1) * H_GAP;
-    nodeIds.forEach((id, c) => {
-      positions[id] = {
-        x: CENTER_X + (c * H_GAP) - (rowWidth / 2),
-        y: 80 + (r * V_GAP)
-      };
+  // Add real nodes
+  flow.value.forEach(node => {
+    rows[ranks[node.id]].push({ id: node.id, isVirtual: false });
+  });
+
+  // Add virtual nodes for multi-rank edges
+  flow.value.forEach(node => {
+    getConnections(node).forEach(conn => {
+      const r1 = ranks[node.id];
+      const r2 = ranks[conn.to];
+      if (r2 > r1 + 1) {
+        for (let r = r1 + 1; r < r2; r++) {
+          const vId = `v_${node.id}_${conn.to}_${r}`;
+          rows[r].push({ id: vId, isVirtual: true });
+        }
+      }
+    });
+  });
+
+  // 3. Simple Ordering (TBD: Barycenter, but for now just insertion order works okay if stable)
+  // We'll keep it simple for now as requested: "nodes should make space".
+
+  // 4. Calculate Positions
+  const V_GAP = 200;
+  const H_GAP = 260; // Wide enough to see paths
+  const CENTER_X = 600;
+
+  rows.forEach((items, r) => {
+    if (!items || items.length === 0) return;
+    const rowWidth = (items.length - 1) * H_GAP;
+    items.forEach((item, c) => {
+      const x = CENTER_X + (c * H_GAP) - (rowWidth / 2);
+      const y = 80 + (r * V_GAP);
+      if (!item.isVirtual) {
+        positions[item.id] = { x, y };
+      } else {
+        virtualPoints[item.id] = { x, y };
+      }
     });
   });
 }
@@ -242,10 +267,11 @@ function addNode(type: NodeType) {
 
 function toggleLogicType() {
   if (!selected.value) return;
-  if (typeof selected.value.next === 'string') {
-    selected.value.next = { op: 'if', val: 'true', lhs: selected.value.next, rhs: '' };
+  const selNode = selected.value as any;
+  if (typeof selNode.next === 'string') {
+    selNode.next = { op: 'if', val: 'true', lhs: selNode.next, rhs: '' };
   } else {
-    selected.value.next = (selected.value.next as any).lhs || '';
+    selNode.next = (selNode.next as any).lhs || '';
   }
 }
 
@@ -254,16 +280,49 @@ function deleteNode(id: string) {
   if (selected.value?.id === id) selected.value = null;
 }
 
-function selectNode(node: Node) { selected.value = node; }
+function selectNode(node: AnyNode) { selected.value = node; }
 
 function generateVerticalPath(fromId: string, toId: string) {
   const start = positions[fromId];
   const end = positions[toId];
   if (!start || !end) return "";
-  const x1 = start.x + 100, y1 = start.y + 80, x2 = end.x + 100, y2 = end.y;
-  const midY = y1 + (y2 - y1) / 2;
-  return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+
+  const r1 = flow.value.find(n => n.id === fromId) ? (ranksCache[fromId] ?? 0) : 0; // Need ranks here
+  // Actually, we can derive rank from positions.y
+  const getYRank = (y: number) => Math.round((y - 80) / 200);
+  const startRank = getYRank(start.y);
+  const endRank = getYRank(end.y);
+
+  let points = [{ x: start.x + 100, y: start.y + 80 }];
+  
+  // Add intermediate virtual points
+  for (let r = startRank + 1; r < endRank; r++) {
+    const vId = `v_${fromId}_${toId}_${r}`;
+    const vp = virtualPoints[vId];
+    if (vp) {
+      points.push({ x: vp.x, y: vp.y + 40 }); // Middle of virtual "slot"
+    }
+  }
+  
+  points.push({ x: end.x + 100, y: end.y });
+
+  // Generate path string
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const p0 = points[i-1];
+    const p1 = points[i];
+    const midY = p0.y + (p1.y - p0.y) / 2;
+    d += ` C ${p0.x} ${midY}, ${p1.x} ${midY}, ${p1.x} ${p1.y}`;
+  }
+  return d;
 }
+
+// Helper to keep track of ranks for path generation (simplified)
+const ranksCache: Record<string, number> = {};
+watch(positions, () => {
+  // We can't easily rely on ranksCache in generateVerticalPath if it's not reactive or if we don't update it right.
+  // Using positions.y is safer.
+}, { deep: true });
 
 function getConnColor(type: string) {
   return type === 'true' ? '#22c55e' : type === 'false' ? '#ef4444' : '#64748b';
