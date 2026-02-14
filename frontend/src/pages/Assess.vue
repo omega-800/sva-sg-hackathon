@@ -64,123 +64,125 @@ const handleProcedeWithoutAnswer = () => {
 </script>
 
 <template>
-  <v-app>
-    <v-stepper v-model="step" alt-labels v-if="titles.length > 0">
-      <template v-slot:default="{ prev, next }">
-        <v-stepper-header>
-          <template v-for="(title, index) in titles" :key="index">
-            <v-stepper-item
+  <v-container>
+
+    <v-app>
+      <v-stepper v-model="step" alt-labels v-if="titles.length > 0">
+        <template v-slot:default="{ prev, next }">
+          <v-stepper-header>
+            <template v-for="(title, index) in titles" :key="index">
+              <v-stepper-item
               :complete="index < step - 1"
               :step="index + 1"
               :value="index + 1"
               :title="title"
               :editable="true"
               @click="handleJump(index)"
-            ></v-stepper-item>
-            <v-divider v-if="index < titles.length - 1"></v-divider>
-          </template>
-        </v-stepper-header>
-
-        <v-stepper-window v-model="step">
-          <v-stepper-window-item
+              ></v-stepper-item>
+              <v-divider v-if="index < titles.length - 1"></v-divider>
+            </template>
+          </v-stepper-header>
+          
+          <v-stepper-window v-model="step">
+            <v-stepper-window-item
             v-for="(group, index) in groupedPath"
             :key="index"
             :value="index + 1"
-          >
+            >
             <v-card flat>
               <v-card-text>
                 <!-- Loop through nodes in this group -->
                 <template
-                  v-for="(nodeItem, nodeIndex) in group.nodes"
-                  :key="nodeItem.index"
+                v-for="(nodeItem, nodeIndex) in group.nodes"
+                :key="nodeItem.index"
                 >
-                  <!-- Question Node -->
-                  <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
-                    <StepTwo
-                      :node="nodeItem.node"
-                      :disabled="nodeItem.index < flowStore.currentStepIndex"
-                    />
-
-                    <div
-                      v-if="nodeItem.index === flowStore.currentStepIndex"
-                      class="mt-4 d-flex justify-space-between"
-                    >
-                      <v-btn
-                        v-if="flowStore.currentStepIndex > 0"
-                        variant="text"
-                        @click="handleBack"
-                        >Zurück</v-btn
-                      >
-                      <v-spacer v-else></v-spacer>
-                      <v-btn color="primary" @click="handleNext">Weiter</v-btn>
-                    </div>
-                  </div>
-                  <template v-else-if="nodeItem.node.type === 'repeat-node'">
-                    <div
-                      v-if="nodeItem.node.sub.type === 'input-node'"
+                <!-- Question Node -->
+                <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
+                  <StepTwo
+                  :node="nodeItem.node"
+                  :disabled="nodeItem.index < flowStore.currentStepIndex"
+                  />
+                  
+                  <div
+                  v-if="nodeItem.index === flowStore.currentStepIndex"
+                  class="mt-4 d-flex justify-space-between"
+                  >
+                  <v-btn
+                  v-if="flowStore.currentStepIndex > 0"
+                  variant="text"
+                  @click="handleBack"
+                  >Zurück</v-btn
+                  >
+                  <v-spacer v-else></v-spacer>
+                  <v-btn color="primary" @click="handleNext">Weiter</v-btn>
+                </div>
+              </div>
+              <template v-else-if="nodeItem.node.type === 'repeat-node'">
+                <div
+                v-if="nodeItem.node.sub.type === 'input-node'"
                       class="mb-6"
                     >
-                      <StepTwo
-                        v-for="i in evalFlowOperation(
-                          toRaw(answers),
-                          nodeItem.node.n,
-                        )"
+                    <StepTwo
+                    v-for="i in evalFlowOperation(
+                      toRaw(answers),
+                      nodeItem.node.n,
+                    )"
                         :node="nodeItem.node.sub"
                         :disabled="nodeItem.index < flowStore.currentStepIndex"
-                      />
-
+                        />
+                        
                       <div
-                        v-if="nodeItem.index === flowStore.currentStepIndex"
-                        class="mt-4 d-flex justify-space-between"
+                      v-if="nodeItem.index === flowStore.currentStepIndex"
+                      class="mt-4 d-flex justify-space-between"
                       >
-                        <v-btn
-                          v-if="flowStore.currentStepIndex > 0"
-                          variant="text"
-                          @click="handleBack"
-                          >Zurück</v-btn
-                        >
-                        <v-spacer v-else></v-spacer>
-                        <v-btn color="primary" @click="handleNext"
-                          >Weiter</v-btn
-                        >
+                      <v-btn
+                      v-if="flowStore.currentStepIndex > 0"
+                      variant="text"
+                      @click="handleBack"
+                      >Zurück</v-btn
+                      >
+                      <v-spacer v-else></v-spacer>
+                      <v-btn color="primary" @click="handleNext"
+                      >Weiter</v-btn
+                      >
                       </div>
                     </div>
                   </template>
-
+                  
                   <!-- Description/Start Node -->
                   <div
                     v-else-if="
                       nodeItem.node.type !== 'input-node' &&
                       nodeItem.node.type !== 'end-node'
-                    "
+                      "
                     class="mb-6"
-                  >
+                    >
                     <p v-if="nodeItem.node.desc">{{ nodeItem.node.desc }}</p>
                     <div
-                      v-if="nodeItem.index === flowStore.currentStepIndex"
-                      class="mt-4 d-flex justify-space-between"
+                    v-if="nodeItem.index === flowStore.currentStepIndex"
+                    class="mt-4 d-flex justify-space-between"
                     >
-                      <v-btn
-                        v-if="flowStore.currentStepIndex > 0"
-                        variant="text"
-                        @click="handleBack"
-                        >Zurück</v-btn
-                      >
-                      <v-spacer v-else></v-spacer>
-                      <v-btn color="primary" @click="handleProcedeWithoutAnswer"
-                        >Starten</v-btn
-                      >
-                    </div>
+                    <v-btn
+                    v-if="flowStore.currentStepIndex > 0"
+                    variant="text"
+                    @click="handleBack"
+                    >Zurück</v-btn
+                    >
+                    <v-spacer v-else></v-spacer>
+                    <v-btn color="primary" @click="handleProcedeWithoutAnswer"
+                    >Starten</v-btn
+                    >
                   </div>
-                </template>
-
-                <!-- End Node Case -->
-                <div
-                  v-if="flowStore.isEndNode && index === groupedPath.length - 1"
-                  class="mt-4"
-                >
-                  <p>Ende</p>
-                  <div class="justify-start mt-4 d-flex">
+                </div>
+              </template>
+              
+              <!-- End Node Case -->
+              <div
+              v-if="flowStore.isEndNode && index === groupedPath.length - 1"
+              class="mt-4"
+              >
+              <p>Ende</p>
+              <div class="justify-start mt-4 d-flex">
                     <v-btn variant="text" @click="handleBack">Zurück</v-btn>
                   </div>
                 </div>
@@ -195,6 +197,7 @@ const handleProcedeWithoutAnswer = () => {
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
   </v-app>
+</v-container>
 </template>
 
 <style>

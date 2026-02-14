@@ -8,10 +8,8 @@ import Assess from "./pages/Assess.vue";
       <RouterLink to="/">Assess</RouterLink>
       <RouterLink to="/admin">Admin</RouterLink>
     </nav>
-    <v-container>
-      <main>
-        <RouterView />
-      </main>
-    </v-container>
+    <main>
+      <RouterView />
+    </main>
   </v-app>
 </template>
