@@ -33,7 +33,7 @@ export type SimpleNode = Node & { type: "simple-node" };
 
 export type StartNode = Node & { type: "start-node" };
 
-export type EndNode = Omit<Node, "next"> & { type: "end-node" };
+export type EndNode = Omit<Node, "next"> & { type: "end-node"; outcome?: "good" | "bad" | "maybe" };
 
 export type QuestionNode = Node & {
   question: string;

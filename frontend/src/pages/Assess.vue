@@ -5,6 +5,9 @@ import { useFlowStore } from "../stores/flow";
 import StepTwo from "../components/StepTwo.vue";
 import { storeToRefs } from "pinia";
 import { evalFlowOperation } from "../utils/util";
+import GoodEnding from "../components/GoodEnding.vue";
+import BadEnding from "../components/BadEnding.vue";
+import MaybeEnding from "../components/MaybeEnding.vue";
 
 const flowStore = useFlowStore();
 const { answers } = storeToRefs(flowStore);
@@ -99,7 +102,7 @@ const handleProcedeWithoutAnswer = () => {
                 <!-- Question Node -->
                 <div v-if="nodeItem.node.type === 'input-node'" class="mb-6">
                   <StepTwo
-                  :node="nodeItem.node"
+                  :node="(nodeItem.node as any)"
                   :disabled="nodeItem.index < flowStore.currentStepIndex"
                   />
                   
@@ -127,9 +130,9 @@ const handleProcedeWithoutAnswer = () => {
                       toRaw(answers),
                       nodeItem.node.n,
                     )"
-                        :node="nodeItem.node.sub"
-                        :disabled="nodeItem.index < flowStore.currentStepIndex"
-                        />
+                         :node="(nodeItem.node.sub as any)"
+                         :disabled="nodeItem.index < flowStore.currentStepIndex"
+                         />
                         
                       <div
                       v-if="nodeItem.index === flowStore.currentStepIndex"
@@ -181,11 +184,23 @@ const handleProcedeWithoutAnswer = () => {
               v-if="flowStore.isEndNode && index === groupedPath.length - 1"
               class="mt-4"
               >
-              <p>Ende</p>
-              <div class="justify-start mt-4 d-flex">
-                    <v-btn variant="text" @click="handleBack">Zurück</v-btn>
-                  </div>
+                <div v-if="(flowStore.currentNode as any).outcome === 'good'">
+                  <GoodEnding />
                 </div>
+                <div v-else-if="(flowStore.currentNode as any).outcome === 'bad'">
+                  <BadEnding />
+                </div>
+                <div v-else-if="(flowStore.currentNode as any).outcome === 'maybe'">
+                  <MaybeEnding />
+                </div>
+                <div v-else>
+                  <p>{{ flowStore.currentNode?.title || 'Ende' }}</p>
+                </div>
+
+                <div class="justify-start mt-4 d-flex">
+                  <v-btn variant="text" @click="handleBack">Zurück</v-btn>
+                </div>
+              </div>
               </v-card-text>
             </v-card>
           </v-stepper-window-item>
