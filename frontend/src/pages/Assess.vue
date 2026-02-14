@@ -9,6 +9,7 @@ import GoodEnding from "../components/GoodEnding.vue";
 import BadEnding from "../components/BadEnding.vue";
 import MaybeEnding from "../components/MaybeEnding.vue";
 import { useI18nStore } from "../stores/i18n";
+import sozialhilfeImg from "../assets/sozialhilfe.png";
 
 const i18n = useI18nStore();
 const flowStore = useFlowStore();
@@ -169,7 +170,20 @@ const handleProcedeWithoutAnswer = () => {
                       "
                     class="mb-6"
                     >
-                    <p v-if="nodeItem.node.desc">{{ nodeItem.node.desc }}</p>
+                    <v-img
+                      v-if="nodeItem.node.type === 'start-node'"
+                      :src="sozialhilfeImg"
+                      max-height="400"
+                      class="mb-6 rounded-lg bg-grey-lighten-2"
+                      alt="Hero Image"
+                    >
+                      <template v-slot:placeholder>
+                        <div class="d-flex align-center justify-center fill-height">
+                          <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
+                        </div>
+                      </template>
+                    </v-img>
+                    <p v-if="nodeItem.node.desc" class="text-body-1">{{ nodeItem.node.desc }}</p>
                     <div
                     v-if="nodeItem.index === flowStore.currentStepIndex"
                     class="mt-4 d-flex justify-space-between"
