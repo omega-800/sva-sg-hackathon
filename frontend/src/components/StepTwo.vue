@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, toRaw } from "vue";
 import type { InputNode } from "../types";
 import { getAtObjPath, setAtObjPath } from "../utils/util";
 import { useFlowStore } from "../stores/flow";
@@ -15,7 +15,7 @@ const { answers } = storeToRefs(flowStore);
 const submitV = (v) => flowStore.submitAnswerAt(props.node.path, v);
 
 // Computed property to get/set value at specific path
-const answer = computed(()=>getAtObjPath(props.modelValue, props.node.path) ?? null);
+const answer = computed(() => getAtObjPath(toRaw(answers), props.node.path) ?? null);
 </script>
 
 <template>
