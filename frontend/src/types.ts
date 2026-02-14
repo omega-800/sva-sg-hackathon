@@ -38,7 +38,7 @@ export type EndNode = Omit<Node, "next"> & { type: "end-node" };
 export type QuestionNode = Node & {
   question: string;
   path: Array<string>;
-  op?: "add" | "set";
+  op?: "add" | "set" | "push";
 } & ({ type: "decision-node" } | { type: "input-node" });
 
 export type InputNode = QuestionNode & { type: "input-node" } & (
